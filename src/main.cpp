@@ -1,6 +1,8 @@
 #include <iostream>
+#include "Lexer.h";
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
+
+int main(int argc, char **argv) {
+    Lexer test;
     return 0;
 }
