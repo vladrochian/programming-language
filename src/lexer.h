@@ -6,12 +6,15 @@
 #include "token.h"
 
 class Lexer {
-public:
-    std::vector<Token> tokens;
+  public:
+    static std::vector<Token> parse(std::string buffer);
 
-    Token* getNext(std::ifstream &file);
-    Token* getID(std::ifstream &file, char &c);
-    void skipWhitespaces(std::ifstream& file, char& c);
+  private:
+    Token *getNext(std::ifstream &file);
+
+    Token *getID(std::ifstream &file, char &c);
+
+    void skipWhitespaces(std::ifstream &file, char &c);
 
 };
 

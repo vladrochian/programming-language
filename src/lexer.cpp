@@ -1,6 +1,11 @@
 #include <iostream>
 #include "lexer.h";
 
+
+std::vector<Token> Lexer::parse(std::string buffer) {
+    return std::vector<Token>();
+}
+
 //Token* Lexer::getNext(std::ifstream &file) {
 //    char c = 0;
 ////    int state = TOKEN_START;
@@ -52,6 +57,7 @@ Token* Lexer::getID(std::ifstream &file, char &c) {
 //    return new Token(TOKEN_ID, value);
 
 }
+
 //<-------->
 //        Parsez, la fiecare cuvant tb sa vad ce este. Parsez token(getNext) -> skip whitespaces, parse again
 //cum arata o posibilitate de cod?
