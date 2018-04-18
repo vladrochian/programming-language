@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Lexer.h";
+#include "lexer.h";
 
 
 int main(int argc, char **argv) {
