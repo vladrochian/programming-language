@@ -4,21 +4,11 @@
 #include <string>
 #include <vector>
 
+#include "keyword.h"
 #include "operator.h"
 
 class Token {
   public:
-    enum Keyword {
-        KEYWORD_IF,
-        KEYWORD_ELSE,
-        KEYWORD_WHILE,
-        KEYWORD_FOR,
-        KEYWORD_BOOLEAN,
-        KEYWORD_NUMBER,
-        KEYWORD_STRING,
-        KEYWORD_RETURN,
-        KEYWORD_DEF
-    };
     enum TokenType {
         TOKEN_IDENTIFIER,
         TOKEN_KEYWORD,
@@ -34,7 +24,7 @@ class Token {
     union {
         Operator op;
         bool booleanValue;
-        double numberValue;
+        double numberValue = 0.0;
         std::string stringValue;
         Keyword keyword;
     };
