@@ -26,7 +26,8 @@ enum Operator {
     OP_SLASH_EQUALS,
     OP_PERCENT_EQUALS,
     OP_OR_EQUALS,
-    OP_AND_EQUALS
+    OP_AND_EQUALS,
+    OP_COLON
 };
 
 constexpr std::map<std::string, Operator> GET_OPERATOR = {
@@ -51,7 +52,8 @@ constexpr std::map<std::string, Operator> GET_OPERATOR = {
         {"/="s, OP_SLASH_EQUALS},
         {"%="s, OP_PERCENT_EQUALS},
         {"|="s, OP_OR_EQUALS},
-        {"&="s, OP_AND_EQUALS}
+        {"&="s, OP_AND_EQUALS},
+        {":"s, OP_COLON}
 };
 
 #endif //BEAUTY_LANG_OPERATOR_H

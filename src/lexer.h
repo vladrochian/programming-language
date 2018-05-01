@@ -1,21 +1,18 @@
 #ifndef BEAUTY_LANG_LEXER_H
 #define BEAUTY_LANG_LEXER_H
 
+#include <string>
 #include <vector>
-#include <fstream>
+
 #include "token.h"
 
 class Lexer {
   public:
-    static std::vector<Token> parse(std::string buffer);
+    static std::vector<Token> parsefile(const std::string& fileName);
 
   private:
-    Token *getNext(std::ifstream &file);
-
-    Token *getID(std::ifstream &file, char &c);
-
-    void skipWhitespaces(std::ifstream &file, char &c);
-
+    static std::vector<Token> parseLine(int lineIndex, const std::string& buffer);
+    static int skipWhitespace(const std::string& buffer, std::string::const_iterator& it);
 };
 
 #endif //BEAUTY_LANG_LEXER_H

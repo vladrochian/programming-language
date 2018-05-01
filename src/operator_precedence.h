@@ -7,7 +7,7 @@
 enum Associativity {LEFT_TO_RIGHT, RIGHT_TO_LEFT};
 
 constexpr std::vector<Associativity> PRECEDENCE_LEVELS = {
-        LEFT_TO_RIGHT, // 0 - member access, brackets
+        LEFT_TO_RIGHT, // 0 - member access, brackets, type
         RIGHT_TO_LEFT, // 1 - unary operators
         LEFT_TO_RIGHT, // 2 - multiplication, division, remainder
         LEFT_TO_RIGHT, // 3 - addition, subtraction

@@ -9,32 +9,46 @@
 
 class Token {
   public:
-    enum TokenType {
-        TOKEN_IDENTIFIER,
-        TOKEN_KEYWORD,
-        TOKEN_BOOLEAN,
-        TOKEN_NUMBER,
-        TOKEN_STRING,
-        TOKEN_OPERATOR,
-        TOKEN_EOF
+    enum Type {
+        BOOLEAN,
+        NUMBER,
+        STRING,
+        OPERATOR,
+        KEYWORD,
+        IDENTIFIER,
+        INDENT,
+        LINE_FEED,
+        END_OF_FILE
     };
 
-    TokenType type;
+    Token(int line, int col, Type type);
+    Token(int line, int col, Type type, bool value);
+    Token(int line, int col, Type type, int value);
+    Token(int line, int col, Type type, double value);
+    Token(int line, int col, Type type, std::string value);
+    Token(int line, int col, Type type, Operator value);
+    Token(int line, int col, Type type, Keyword value);
 
+    Type getType() const;
+    std::pair<int, int> getLocation() const;
+    bool getBoolValue() const;
+    int getIntValue() const;
+    double getDoubleValue() const;
+    std::string getStringValue() const;
+    Operator getOperator() const;
+    Keyword getKeyword() const;
+
+  private:
+    Type type;
+    std::pair<int, int> location;
     union {
-        Operator op;
-        bool booleanValue;
-        double numberValue = 0.0;
+        bool boolValue;
+        int intValue;
+        double doubleValue;
         std::string stringValue;
-        Keyword keyword;
+        Operator operatorValue;
+        Keyword keywordValue;
     };
-
-    explicit Token(TokenType type);
-    explicit Token(Operator op);
-    explicit Token(bool booleanValue);
-    explicit Token(double numberValue);
-    explicit Token(std::string stringValue, TokenType type = TOKEN_STRING);
-    explicit Token(Keyword keyword);
 };
 
 typedef std::vector<Token>::iterator TokenIter;

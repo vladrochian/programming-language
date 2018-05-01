@@ -1,70 +1,42 @@
-#include <iostream>
 #include "lexer.h";
 
+#include <fstream>
 
-std::vector<Token> Lexer::parse(std::string buffer) {
-    return std::vector<Token>();
-}
-
-//Token* Lexer::getNext(std::ifstream &file) {
-//    char c = 0;
-////    int state = TOKEN_START;
-//
-//    for(;c != EOF;) {
-//        file.get(c);
-//        this -> skipWhitespaces(file, c);
-//        switch (state) {
-//            case TOKEN_START: {
-//                if (isalpha(c) || c == '_') { //start of an TOKEN_ID/Keyword
-////                    return this.getID(file);
-//                    std::cout << "Found an id start";
-//                    state = TOKEN_ID; // maybe split into get id?
-//                    return this -> getID(file, c);
-//                }
-//                else if(c == ':') { //type definition coming next
-//                    return new Token(TOKEN_COLON);
-//                }
-//                else if(c == ';') {
-//                    return new Token(TOKEN_SEMICOLON);
-//                }
-//                else if(c == EOF) {
-//                    return new Token(TOKEN_EOF);
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-void Lexer::skipWhitespaces(std::ifstream& file, char& c) {
-    while (c == ' ') {
-        file.get(c);
+std::vector<Token> Lexer::parsefile(const std::string& fileName) {
+    std::ifstream input(fileName);
+    std::string buffer;
+    std::vector<Token> tokenList;
+    int currentLine = 1;
+    // TODO: check what happens with empty lines
+    while (std::getline(input, buffer)) {
+        std::vector<Token> line = parseLine(currentLine, buffer);
+        tokenList.insert(tokenList.end(), line.begin(), line.end());
+        ++currentLine;
     }
+    tokenList.emplace_back(currentLine, 1, Token::END_OF_FILE);
+    return tokenList;
 }
 
-Token* Lexer::getID(std::ifstream &file, char &c) {
-    std::string value;
-
-    while (isalpha(c) || c == '_') {
-        value += c;
-        file.get(c);
+std::vector<Token> Lexer::parseLine(int lineIndex, const std::string& buffer) {
+    std::string::const_iterator it = buffer.begin();
+    int indentSize = skipWhitespace(buffer, it);
+    if (it == buffer.end()) {
+        return std::vector<Token>();
     }
-
-//    if (!value.compare("int")) {
-//        return new Token(TOKEN_INT);
-//    }
-//
-//    return new Token(TOKEN_ID, value);
-
+    std::vector<Token> tokenList;
+    tokenList.emplace_back(lineIndex, 1, Token::INDENT, indentSize);
+    while (it != buffer.end()) {
+        // TODO: implement
+    }
+    tokenList.emplace_back(lineIndex, buffer.size() + 1, Token::LINE_FEED);
+    return tokenList;
 }
 
-//<-------->
-//        Parsez, la fiecare cuvant tb sa vad ce este. Parsez token(getNext) -> skip whitespaces, parse again
-//cum arata o posibilitate de cod?
-//
-//anastasia: int;
-//anastasia = constant;
-//anastasia = expr ( token operator token)
-//fun test(): type {
-//    code block
-//}
+int Lexer::skipWhitespace(const std::string& buffer, std::string::const_iterator& it) {
+    int count = 0;
+    while (it != buffer.end() && std::isspace(*it)) {
+        ++it;
+        ++count;
+    }
+    return count;
+}
