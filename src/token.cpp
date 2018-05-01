@@ -2,8 +2,12 @@
 
 Token::Token(Token::TokenType type) : type(type) {}
 
-Token::Token(Token::TokenType type, int intValue) : type(type), intValue(intValue) {}
+Token::Token(Operator op) : type(TOKEN_OPERATOR), op(op) {}
 
-Token::Token(Token::TokenType type, char op) : type(type), op(op) {}
+Token::Token(bool booleanValue) : type(TOKEN_BOOLEAN), booleanValue(booleanValue) {}
 
-Token::Token(Token::TokenType type, std::string stringValue) : type(type), stringValue(std::move(stringValue)) {}
+Token::Token(double numberValue) : type(TOKEN_NUMBER), numberValue(numberValue) {}
+
+Token::Token(std::string stringValue, TokenType type) : type(type), stringValue(std::move(stringValue)) {}
+
+Token::Token(Keyword keyword) : type(TOKEN_KEYWORD), keyword(keyword) {}

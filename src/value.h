@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_PRIMITIVE_VALUE_H
-#define BEAUTY_LANG_PRIMITIVE_VALUE_H
+#ifndef BEAUTY_LANG_VALUE_H
+#define BEAUTY_LANG_VALUE_H
 
 #include <string>
 #include <map>

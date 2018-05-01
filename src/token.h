@@ -2,33 +2,51 @@
 #define BEAUTY_LANG_TOKEN_H
 
 #include <string>
+#include <vector>
+
+#include "operator.h"
 
 class Token {
   public:
+    enum Keyword {
+        KEYWORD_IF,
+        KEYWORD_ELSE,
+        KEYWORD_WHILE,
+        KEYWORD_FOR,
+        KEYWORD_BOOLEAN,
+        KEYWORD_NUMBER,
+        KEYWORD_STRING,
+        KEYWORD_RETURN,
+        KEYWORD_DEF
+    };
     enum TokenType {
-        TOKEN_ID,
-        TOKEN_CT_INT,
+        TOKEN_IDENTIFIER,
+        TOKEN_KEYWORD,
+        TOKEN_BOOLEAN,
+        TOKEN_NUMBER,
+        TOKEN_STRING,
         TOKEN_OPERATOR,
-
-        TOKEN_SEMICOLON,
-        TOKEN_COLON,
-        TOKEN_INT,
-        TOKEN_FUN,
         TOKEN_EOF
     };
 
     TokenType type;
 
     union {
-        int intValue;
-        char op;
+        Operator op;
+        bool booleanValue;
+        double numberValue;
         std::string stringValue;
+        Keyword keyword;
     };
 
-    Token(TokenType type);
-    Token(TokenType type, int intValue);
-    Token(TokenType type, char op);
-    Token(TokenType type, std::string stringValue);
+    explicit Token(TokenType type);
+    explicit Token(Operator op);
+    explicit Token(bool booleanValue);
+    explicit Token(double numberValue);
+    explicit Token(std::string stringValue, TokenType type = TOKEN_STRING);
+    explicit Token(Keyword keyword);
 };
+
+typedef std::vector<Token>::iterator TokenIter;
 
 #endif //BEAUTY_LANG_TOKEN_H
