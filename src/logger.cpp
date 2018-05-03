@@ -5,22 +5,22 @@
 void Logger::print(const Token& token, const std::string& separator) {
     switch (token.getType()) {
         case Token::BOOLEAN:
-            std::printf("[BOOLEAN:%s]", token.getBoolValue() ? "true" : "false");
+            std::printf("[%s]", token.getBoolValue() ? "true" : "false");
             break;
         case Token::NUMBER:
-            std::printf("[NUMBER:%f]", token.getDoubleValue());
+            std::printf("[%f]", token.getDoubleValue());
             break;
         case Token::STRING:
-            std::printf("[STRING:\"%s\"]", token.getStringValue());
+            std::printf("[\"%s\"]", token.getStringValue().c_str());
             break;
         case Token::OPERATOR:
-            std::printf("[OPERATOR:%s]", toString(token.getOperator()));
+            std::printf("[%s]", toString(token.getOperator()).c_str());
             break;
         case Token::KEYWORD:
-            std::printf("[KEYWORD:%s]", toString(token.getKeyword()));
+            std::printf("[KW:%s]", toString(token.getKeyword()).c_str());
             break;
         case Token::IDENTIFIER:
-            std::printf("[ID:%s]", token.getStringValue());
+            std::printf("[ID:%s]", token.getStringValue().c_str());
             break;
         case Token::INDENT:
             std::printf("[INDENT:%d]", token.getIntValue());
@@ -33,6 +33,9 @@ void Logger::print(const Token& token, const std::string& separator) {
             break;
     }
     printf("%s", separator.c_str());
+    if (token.getType() == Token::LINE_FEED) {
+        printf("\n");
+    }
 }
 
 std::string Logger::toString(Operator op) {
@@ -41,7 +44,7 @@ std::string Logger::toString(Operator op) {
             return it.first;
         }
     }
-    return ""s;
+    return "";
 }
 
 std::string Logger::toString(Keyword keyword) {
@@ -50,5 +53,5 @@ std::string Logger::toString(Keyword keyword) {
             return it.first;
         }
     }
-    return ""s;
+    return "";
 }

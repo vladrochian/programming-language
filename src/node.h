@@ -3,7 +3,7 @@
 
 #include <string>
 
-virtual class Node {
+class Node {
   public:
     virtual std::string getType();
 };

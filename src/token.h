@@ -41,14 +41,12 @@ class Token {
   private:
     Type type;
     std::pair<int, int> location;
-    union {
-        bool boolValue;
-        int intValue;
-        double doubleValue;
-        std::string stringValue;
-        Operator operatorValue;
-        Keyword keywordValue;
-    };
+    bool boolValue;
+    int intValue;
+    double doubleValue;
+    std::string stringValue;
+    Operator operatorValue;
+    Keyword keywordValue;
 };
 
 typedef std::vector<Token>::iterator TokenIter;

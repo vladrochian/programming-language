@@ -1,10 +1,15 @@
+#include <iostream>
 #include "lexer.h"
 #include "logger.h"
 
 int main(int argc, char **argv) {
-    auto tokenList = Lexer::readfile("test_source.txt");
-    for (const auto& it : tokenList) {
-        Logger::print(it);
+    try {
+        auto tokenList = Lexer::readfile("../test_source.txt");
+        for (const auto& it : tokenList) {
+            Logger::print(it);
+        }
+    } catch (std::exception& e) {
+        std::cout << e.what() << "\n";
     }
     return 0;
 }

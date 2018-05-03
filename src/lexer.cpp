@@ -1,12 +1,17 @@
-#include "lexer.h";
+#include "lexer.h"
 
 #include <fstream>
+#include <iostream>
 
 #include "keyword.h"
 #include "operator.h"
+#include "syntax_error.h"
 
 std::vector<Token> Lexer::readfile(const std::string& fileName) {
     std::ifstream input(fileName);
+    if (input) {
+        std::cout << "Read file\n";
+    }
     std::string buffer;
     std::vector<Token> tokenList;
     int currentLine = 1;
@@ -32,10 +37,14 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
         int col = static_cast<int>(it - buffer.begin() + 1);
         std::string s;
         double n;
-        if (isdigit(*it)) {
+        if (std::isdigit(*it)) {
             n = getNumber(buffer, it);
+            if (it != buffer.end() && (std::isalpha(*it) || *it == '_')) {
+                throw SyntaxError(lineIndex, static_cast<int>(it - buffer.begin() + 1),
+                                  "unexpected symbol in numeric value");
+            }
             tokenList.emplace_back(lineIndex, col, Token::NUMBER, n);
-        } else if (isalpha(*it) || *it == '_') {
+        } else if (std::isalpha(*it) || *it == '_') {
             s = getWord(buffer, it);
             if (s == "false") {
                 tokenList.emplace_back(lineIndex, col, Token::BOOLEAN, false);
@@ -48,13 +57,17 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
             }
         } else if (*it == '\'' || *it == '\"') {
             s = getString(buffer, it);
+            if (it == buffer.end()) {
+                throw SyntaxError(lineIndex, static_cast<int>(it - buffer.begin() + 1), "expected ending quote");
+            }
+            ++it;
             tokenList.emplace_back(lineIndex, col, Token::STRING, s);
         } else {
             s = getOperator(buffer, it);
             if (GET_OPERATOR.count(s)) {
                 tokenList.emplace_back(lineIndex, col, Token::OPERATOR, GET_OPERATOR.at(s));
             } else {
-                // TODO: Syntax exc
+                throw SyntaxError(lineIndex, col, "unknown symbol");
             }
         }
         skipWhitespace(buffer, it);
@@ -70,4 +83,46 @@ int Lexer::skipWhitespace(const std::string& buffer, std::string::const_iterator
         ++count;
     }
     return count;
+}
+
+std::string Lexer::getWord(const std::string& buffer, std::string::const_iterator& it) {
+    std::string ans;
+    while (it != buffer.end() && std::isalnum(*it) || *it == '_') {
+        ans += *(it++);
+    }
+    return ans;
+}
+
+double Lexer::getNumber(const std::string& buffer, std::string::const_iterator& it) {
+    // TODO: scientific notation?
+    double ans = 0;
+    while (it != buffer.end() && std::isdigit(*it)) {
+        ans = ans * 10 + *(it++) - '0';
+    }
+    if (it != buffer.end() && *it == '.') {
+        ++it;
+        double pw = 1.0;
+        while (it != buffer.end() && std::isdigit(*it)) {
+            ans += (pw /= 10) * (*(it++) - '0');
+        }
+    }
+    return ans;
+}
+
+std::string Lexer::getString(const std::string& buffer, std::string::const_iterator& it) {
+    // TODO: escape characters
+    char quote = *(it++);
+    std::string ans;
+    while (it != buffer.end() && *it != quote) {
+        ans += *(it++);
+    }
+    return ans;
+}
+
+std::string Lexer::getOperator(const std::string& buffer, std::string::const_iterator& it) {
+    std::string ans;
+    while (it != buffer.end() && !std::isalnum(*it) && *it != '_' && !std::isspace(*it)) {
+        ans += *(it++);
+    }
+    return ans;
 }
