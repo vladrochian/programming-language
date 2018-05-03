@@ -9,3 +9,6 @@ bin/*
 
 # Ignore IDE config directories
 .idea/*
+
+# Ignore test source
+test_source.txt
