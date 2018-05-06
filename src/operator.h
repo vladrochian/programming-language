@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-enum Operator {
+enum OperatorToken {
     OP_DOT,
     OP_COMMA,
     OP_PLUS,
@@ -12,6 +12,7 @@ enum Operator {
     OP_ASTERISK,
     OP_SLASH,
     OP_PERCENT,
+    OP_NOT,
     OP_OR,
     OP_AND,
     OP_OPENING_ROUND,
@@ -37,7 +38,7 @@ enum Operator {
     OP_IS_DIFFERENT
 };
 
-const std::map<std::string, Operator> GET_OPERATOR = {
+const std::map<std::string, OperatorToken> GET_OPERATOR = {
         {".", OP_DOT},
         {",", OP_COMMA},
         {"+", OP_PLUS},
@@ -45,6 +46,7 @@ const std::map<std::string, Operator> GET_OPERATOR = {
         {"*", OP_ASTERISK},
         {"/", OP_SLASH},
         {"%", OP_PERCENT},
+        {"!", OP_NOT},
         {"|", OP_OR},
         {"&", OP_AND},
         {"(", OP_OPENING_ROUND},

@@ -26,7 +26,7 @@ class Token {
     Token(int line, int col, Type type, int value);
     Token(int line, int col, Type type, double value);
     Token(int line, int col, Type type, std::string value);
-    Token(int line, int col, Type type, Operator value);
+    Token(int line, int col, Type type, OperatorToken value);
     Token(int line, int col, Type type, Keyword value);
 
     Type getType() const;
@@ -35,7 +35,7 @@ class Token {
     int getIntValue() const;
     double getDoubleValue() const;
     std::string getStringValue() const;
-    Operator getOperator() const;
+    OperatorToken getOperator() const;
     Keyword getKeyword() const;
 
   private:
@@ -45,7 +45,7 @@ class Token {
     int intValue;
     double doubleValue;
     std::string stringValue;
-    Operator operatorValue;
+    OperatorToken operatorValue;
     Keyword keywordValue;
 };
 

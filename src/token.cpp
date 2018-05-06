@@ -11,7 +11,7 @@ Token::Token(int line, int col, Token::Type type, double value) : location(line,
 Token::Token(int line, int col, Token::Type type, std::string value)
         : location(line, col), type(type), stringValue(std::move(value)) {}
 
-Token::Token(int line, int col, Token::Type type, Operator value)
+Token::Token(int line, int col, Token::Type type, OperatorToken value)
         : location(line, col), type(type), operatorValue(value) {}
 
 Token::Token(int line, int col, Token::Type type, Keyword value)
@@ -21,7 +21,7 @@ Token::Type Token::getType() const { return type; }
 
 std::pair<int, int> Token::getLocation() const { return location; }
 
-Operator Token::getOperator() const { return operatorValue; }
+OperatorToken Token::getOperator() const { return operatorValue; }
 
 bool Token::getBoolValue() const { return boolValue; }
 

@@ -38,7 +38,7 @@ void Logger::print(const Token& token, const std::string& separator) {
     }
 }
 
-std::string Logger::toString(Operator op) {
+std::string Logger::toString(OperatorToken op) {
     for (const auto& it : GET_OPERATOR) {
         if (it.second == op) {
             return it.first;

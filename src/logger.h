@@ -12,7 +12,7 @@ class Logger {
     static void print(const Token& token, const std::string& separator = " ");
 
   private:
-    static std::string toString(Operator op);
+    static std::string toString(OperatorToken op);
     static std::string toString(Keyword keyword);
 };
 
