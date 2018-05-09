@@ -64,10 +64,10 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
             tokenList.emplace_back(lineIndex, col, Token::STRING, s);
         } else {
             s = getOperator(buffer, it);
-            if (GET_OPERATOR.count(s)) {
-                tokenList.emplace_back(lineIndex, col, Token::OPERATOR, GET_OPERATOR.at(s));
-            } else {
+            if (s.empty()) {
                 throw SyntaxError(lineIndex, col, "unknown symbol");
+            } else {
+                tokenList.emplace_back(lineIndex, col, Token::OPERATOR, GET_OPERATOR.at(s));
             }
         }
         skipWhitespace(buffer, it);
@@ -123,6 +123,10 @@ std::string Lexer::getOperator(const std::string& buffer, std::string::const_ite
     std::string ans;
     while (it != buffer.end() && !std::isalnum(*it) && *it != '_' && !std::isspace(*it)) {
         ans += *(it++);
+    }
+    while (!ans.empty() && GET_OPERATOR.count(ans) == 0) {
+        ans.pop_back();
+        --it;
     }
     return ans;
 }

@@ -12,10 +12,5 @@ int main(int argc, char **argv) {
     } catch (std::exception& e) {
         std::cout << e.what() << "\n";
     }
-    Node* node = new Plus(5, 4);
-    if (node->getType() == Node::WHILE) {
-        auto ifNode = dynamic_cast<Plus&>(*node);
-        std::cout << ifNode.leftSon();
-    }
     return 0;
 }
