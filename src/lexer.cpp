@@ -1,7 +1,6 @@
 #include "lexer.h"
 
 #include <fstream>
-#include <iostream>
 
 #include "keyword.h"
 #include "operator.h"
@@ -9,14 +8,14 @@
 
 std::vector<Token> Lexer::readfile(const std::string& fileName) {
     std::ifstream input(fileName);
-    if (input) {
-        std::cout << "Read file\n";
-    }
     std::string buffer;
     std::vector<Token> tokenList;
     int currentLine = 1;
     // TODO: check what happens with empty lines
     while (std::getline(input, buffer)) {
+        if (!buffer.empty() && buffer.back() == '\r') {
+            buffer.pop_back();
+        }
         std::vector<Token> line = readLine(currentLine, buffer);
         tokenList.insert(tokenList.end(), line.begin(), line.end());
         ++currentLine;

@@ -2,11 +2,11 @@
 
 Node::Type Node::getType() const { return NODE; }
 
-BlockNode::BlockNode(std::vector<Node> content) : content(std::move(content)) {}
+BlockNode::BlockNode(const std::vector<Node*>& content) : content(content) {}
 
 Node::Type BlockNode::getType() const { return BLOCK; }
 
-std::vector<Node> BlockNode::getContent() const { return content; }
+std::vector<Node*> BlockNode::getContent() const { return content; }
 
 VariableDeclarationNode::VariableDeclarationNode(std::string name, PrimitiveType type)
         : name(std::move(name)), type(type) {}
@@ -63,3 +63,15 @@ VariableNode::VariableNode(std::string name) : name(std::move(name)) {}
 Node::Type VariableNode::getType() const { return VARIABLE; }
 
 std::string VariableNode::getName() const { return name; }
+
+ReturnInstructionNode::ReturnInstructionNode(ExpressionNode* expression) : expression(expression) {}
+
+Node::Type ReturnInstructionNode::getType() const { return RETURN_INSTRUCTION; }
+
+ExpressionNode* ReturnInstructionNode::getExpression() { return expression; }
+
+PrintInstructionNode::PrintInstructionNode(ExpressionNode* expression) : expression(expression) {}
+
+Node::Type PrintInstructionNode::getType() const { return PRINT_INSTRUCTION; }
+
+ExpressionNode* PrintInstructionNode::getExpression() { return expression; }

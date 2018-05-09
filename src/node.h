@@ -21,7 +21,9 @@ class Node {
         VARIABLE,
         FUNCTION_CALL,
         UNARY_OPERATOR,
-        BINARY_OPERATOR
+        BINARY_OPERATOR,
+        RETURN_INSTRUCTION,
+        PRINT_INSTRUCTION
     };
 
     virtual Type getType() const;
@@ -29,12 +31,12 @@ class Node {
 
 class BlockNode : public Node {
   public:
-    explicit BlockNode(std::vector<Node> content);
+    explicit BlockNode(const std::vector<Node*>& content);
     Type getType() const override;
-    std::vector<Node> getContent() const;
+    std::vector<Node*> getContent() const;
 
   private:
-    std::vector<Node> content;
+    std::vector<Node*> content;
 };
 
 class VariableDeclarationNode : public Node {
@@ -129,6 +131,26 @@ class VariableNode : public ExpressionNode {
 
   private:
     std::string name;
+};
+
+class ReturnInstructionNode : public Node {
+  public:
+    explicit ReturnInstructionNode(ExpressionNode* expression);
+    Type getType() const override;
+    ExpressionNode* getExpression();
+
+  private:
+    ExpressionNode* expression;
+};
+
+class PrintInstructionNode : public Node {
+  public:
+    explicit PrintInstructionNode(ExpressionNode* expression);
+    Type getType() const override;
+    ExpressionNode* getExpression();
+
+  private:
+    ExpressionNode* expression;
 };
 
 #endif //BEAUTY_LANG_NODE_H

@@ -4,16 +4,20 @@
 #include <string>
 
 #include "keyword.h"
+#include "node.h"
 #include "operator.h"
 #include "token.h"
 
 class Logger {
   public:
-    static void print(const Token& token, const std::string& separator = " ");
+    static void print(const Token& token);
+    static void print(Node* node, int indent = 0);
 
   private:
     static std::string toString(OperatorToken op);
     static std::string toString(Keyword keyword);
+    static void printExpression(ExpressionNode* node);
+    static void printIndent(int size);
 };
 
 #endif //BEAUTY_LANG_LOGGER_H

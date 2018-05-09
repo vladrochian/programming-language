@@ -3,21 +3,27 @@
 #include "syntax_error.h"
 #include "types.h"
 
-Node* Parser::parseFile(TokenIter iter) {
-
+BlockNode* Parser::parseFile(const std::vector<Token>& file) {
+    auto iter = file.begin();
+    BlockNode* node = parseBlock(iter);
+    if (iter->getType() != Token::END_OF_FILE) {
+        auto location = iter->getLocation();
+        throw SyntaxError(location.first, location.second, "expected end of file");
+    }
+    return node;
 }
 
-std::vector<Token> Parser::getInstruction(TokenIter& iter) {
+std::vector<Token> Parser::parseInstruction(TokenIter& iter) {
     std::vector<Token> ans;
     while (iter->getType() != Token::LINE_FEED) {
         ans.push_back(*(iter++));
     }
-    ++iter;
+    ans.push_back(*(iter++));
     return ans;
 }
 
 Parser::Type Parser::getInstructionType(const std::vector<Token>& tokenList) {
-    if (tokenList.size() == 4 && tokenList[1].getType() == Token::IDENTIFIER &&
+    if (tokenList.size() > 4 && tokenList[1].getType() == Token::IDENTIFIER &&
         tokenList[2].getType() == Token::OPERATOR && tokenList[2].getOperator() == OP_COLON) {
         return VARIABLE_DECLARATION;
     }
@@ -35,6 +41,8 @@ Parser::Type Parser::getInstructionType(const std::vector<Token>& tokenList) {
                 return FOR;
             case KEYWORD_RETURN:
                 return RETURN_STATEMENT;
+            case KEYWORD_PRINT:
+                return PRINT_STATEMENT;
             default:
                 return EXPRESSION;
         }
@@ -42,7 +50,48 @@ Parser::Type Parser::getInstructionType(const std::vector<Token>& tokenList) {
     return EXPRESSION;
 }
 
-Node* Parser::getVariableDeclaration(const std::vector<Token>& tokenList) {
+BlockNode* Parser::parseBlock(TokenIter& iter) {
+    int baseIndent = iter->getIntValue();
+    std::vector<Node*> nodeList;
+    while (iter->getType() != Token::END_OF_FILE && iter->getIntValue() == baseIndent) {
+        // TODO: multiple lines instruction
+        auto currentInstruction = parseInstruction(iter);
+        Node* node;
+        auto it = currentInstruction.cbegin();
+        switch (getInstructionType(currentInstruction)) {
+            case EXPRESSION:
+                node = parseExpression(it);
+                if (it->getType() != Token::LINE_FEED) {
+                    auto location = it->getLocation();
+                    throw SyntaxError(location.first, location.second, "expected operator or end of expression");
+                }
+                break;
+            case VARIABLE_DECLARATION:
+                node = parseVariableDeclaration(currentInstruction);
+                break;
+            case RETURN_STATEMENT:
+                node = parseReturnStatement(currentInstruction);
+                break;
+            case PRINT_STATEMENT:
+                node = parsePrintStatement(currentInstruction);
+                break;
+            default:
+                // TODO: implement structures
+                break;
+        }
+        nodeList.push_back(node);
+    }
+    return new BlockNode(nodeList);
+}
+
+ExpressionNode* Parser::parseExpression(TokenIter& iter) {
+    while (iter->getType() != Token::LINE_FEED)
+        ++iter;
+    return new ExpressionNode;
+}
+
+VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
+    // TODO: initialization
     std::string id = tokenList[1].getStringValue();
     PrimitiveType type;
     if (tokenList[3].getType() == Token::KEYWORD) {
@@ -68,10 +117,22 @@ Node* Parser::getVariableDeclaration(const std::vector<Token>& tokenList) {
     return new VariableDeclarationNode(id, type);
 }
 
-std::pair<Node*, TokenIter> Parser::parseFunction(TokenIter iter) {
-
+ReturnInstructionNode* Parser::parseReturnStatement(const std::vector<Token>& tokenList) {
+    auto iter = tokenList.begin() + 2;
+    if (iter->getType() == Token::LINE_FEED) {
+        auto location = iter->getLocation();
+        throw SyntaxError(location.first, location.second, "expected expression");
+    }
+    ExpressionNode* expression = parseExpression(iter);
+    return new ReturnInstructionNode(expression);
 }
 
-std::pair<Node*, TokenIter> Parser::parseBlock(TokenIter iter) {}
-
-std::pair<Node*, TokenIter> Parser::parseExpression(TokenIter iter) {}
+PrintInstructionNode* Parser::parsePrintStatement(const std::vector<Token>& tokenList) {
+    auto iter = tokenList.begin() + 2;
+    if (iter->getType() == Token::LINE_FEED) {
+        auto location = iter->getLocation();
+        throw SyntaxError(location.first, location.second, "expected expression");
+    }
+    ExpressionNode* expression = parseExpression(iter);
+    return new PrintInstructionNode(expression);
+}

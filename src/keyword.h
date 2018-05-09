@@ -13,7 +13,8 @@ enum Keyword {
     KEYWORD_NUMBER,
     KEYWORD_STRING,
     KEYWORD_DEF,
-    KEYWORD_RETURN
+    KEYWORD_RETURN,
+    KEYWORD_PRINT
 };
 
 const std::map<std::string, Keyword> GET_KEYWORD = std::map<std::string, Keyword>({
@@ -25,7 +26,8 @@ const std::map<std::string, Keyword> GET_KEYWORD = std::map<std::string, Keyword
         {"number", KEYWORD_NUMBER},
         {"string", KEYWORD_STRING},
         {"def", KEYWORD_DEF},
-        {"return", KEYWORD_RETURN}
+        {"return", KEYWORD_RETURN},
+        {"print", KEYWORD_PRINT}
 });
 
 #endif //BEAUTY_LANG_KEYWORD_H

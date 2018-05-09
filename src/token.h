@@ -49,6 +49,6 @@ class Token {
     Keyword keywordValue;
 };
 
-typedef std::vector<Token>::iterator TokenIter;
+typedef std::vector<Token>::const_iterator TokenIter;
 
 #endif //BEAUTY_LANG_TOKEN_H
