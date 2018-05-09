@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "types.h"
+
 class Node {
   public:
     enum Type {
@@ -37,13 +39,14 @@ class BlockNode : public Node {
 
 class VariableDeclarationNode : public Node {
   public:
-    VariableDeclarationNode(std::string name, std::string type);
+    VariableDeclarationNode(std::string name, PrimitiveType type);
     Type getType() const override;
     std::string getVariableName() const;
-    std::string getVariableType() const;
+    PrimitiveType getVariableType() const;
 
   private:
-    std::string name, type;
+    std::string name;
+    PrimitiveType type;
 };
 
 class ExpressionNode : public Node {

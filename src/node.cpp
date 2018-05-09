@@ -8,14 +8,14 @@ Node::Type BlockNode::getType() const { return BLOCK; }
 
 std::vector<Node> BlockNode::getContent() const { return content; }
 
-VariableDeclarationNode::VariableDeclarationNode(std::string name, std::string type)
-        : name(std::move(name)), type(std::move(type)) {}
+VariableDeclarationNode::VariableDeclarationNode(std::string name, PrimitiveType type)
+        : name(std::move(name)), type(type) {}
 
 Node::Type VariableDeclarationNode::getType() const { return VARIABLE_DECLARATION; }
 
 std::string VariableDeclarationNode::getVariableName() const { return name; }
 
-std::string VariableDeclarationNode::getVariableType() const { return type; }
+PrimitiveType VariableDeclarationNode::getVariableType() const { return type; }
 
 Node::Type ExpressionNode::getType() const { return EXPRESSION; }
 

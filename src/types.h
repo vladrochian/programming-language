@@ -1,0 +1,8 @@
+#ifndef BEAUTY_LANG_TYPES_H
+#define BEAUTY_LANG_TYPES_H
+
+enum PrimitiveType {
+    TYPE_NUMBER, TYPE_BOOLEAN, TYPE_STRING
+};
+
+#endif //BEAUTY_LANG_TYPES_H
