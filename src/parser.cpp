@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include "expression_parser.h"
 #include "syntax_error.h"
 #include "types.h"
 
@@ -85,9 +86,7 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
 }
 
 ExpressionNode* Parser::parseExpression(TokenIter& iter) {
-    while (iter->getType() != Token::LINE_FEED)
-        ++iter;
-    return new ExpressionNode;
+    return ExpressionParser::parse(iter);
 }
 
 VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
