@@ -89,7 +89,9 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
                 block2 = nullptr;
                 it = iter;
                 currentInstruction = parseInstruction(it);
-                if (getInstructionType(currentInstruction) == ELSE) {
+                if (currentInstruction[0].getType() == Token::INDENT &&
+                    currentInstruction[0].getIntValue() == baseIndent &&
+                    getInstructionType(currentInstruction) == ELSE) {
                     if (it->getType() != Token::INDENT || it->getIntValue() <= baseIndent) {
                         auto location = it->getLocation();
                         throw SyntaxError(location.first, location.second, "expected else block");
@@ -98,6 +100,15 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
                     block2 = parseBlock(iter);
                 }
                 node = new IfNode(condition, block1, block2);
+                break;
+            case WHILE:
+                condition = parseCondition(currentInstruction);
+                if (iter->getType() != Token::INDENT || iter->getIntValue() <= baseIndent) {
+                    auto location = iter->getLocation();
+                    throw SyntaxError(location.first, location.second, "expected while block");
+                }
+                block1 = parseBlock(iter);
+                node = new WhileNode(condition, block1);
                 break;
             default:
                 // TODO: implement structures
