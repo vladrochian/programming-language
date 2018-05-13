@@ -24,7 +24,9 @@ class Node {
         BINARY_OPERATOR,
         STANDALONE_EXPRESSION,
         RETURN_INSTRUCTION,
-        PRINT_INSTRUCTION
+        PRINT_INSTRUCTION,
+        IF_STATEMENT,
+        WHILE_STATEMENT
     };
 
     virtual Type getType() const;
@@ -157,7 +159,7 @@ class StandaloneExpressionNode : public Node {
   public:
     explicit StandaloneExpressionNode(ExpressionNode* expression);
     Type getType() const override;
-    ExpressionNode* getExpression();
+    ExpressionNode* getExpression() const;
 
   private:
     ExpressionNode* expression;
@@ -167,7 +169,7 @@ class ReturnInstructionNode : public Node {
   public:
     explicit ReturnInstructionNode(ExpressionNode* expression);
     Type getType() const override;
-    ExpressionNode* getExpression();
+    ExpressionNode* getExpression() const;
 
   private:
     ExpressionNode* expression;
@@ -177,10 +179,36 @@ class PrintInstructionNode : public Node {
   public:
     explicit PrintInstructionNode(ExpressionNode* expression);
     Type getType() const override;
-    ExpressionNode* getExpression();
+    ExpressionNode* getExpression() const;
 
   private:
     ExpressionNode* expression;
+};
+
+class IfNode : public Node {
+  public:
+    IfNode(ExpressionNode* condition, BlockNode* thenBlock, BlockNode* elseBlock = nullptr);
+    Type getType() const override;
+    ExpressionNode* getCondition() const;
+    BlockNode* getThenBlock() const;
+    BlockNode* getElseBlock() const;
+
+  private:
+    ExpressionNode* condition;
+    BlockNode* thenBlock;
+    BlockNode* elseBlock;
+};
+
+class WhileNode : public Node {
+  public:
+    WhileNode(ExpressionNode* condition, BlockNode* block);
+    Type getType() const override;
+    ExpressionNode* getCondition() const;
+    BlockNode* getBlock() const;
+
+  private:
+    ExpressionNode* condition;
+    BlockNode* block;
 };
 
 #endif //BEAUTY_LANG_NODE_H

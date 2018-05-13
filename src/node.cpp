@@ -68,16 +68,35 @@ StandaloneExpressionNode::StandaloneExpressionNode(ExpressionNode* expression) :
 
 Node::Type StandaloneExpressionNode::getType() const { return STANDALONE_EXPRESSION; }
 
-ExpressionNode* StandaloneExpressionNode::getExpression() { return expression; }
+ExpressionNode* StandaloneExpressionNode::getExpression() const { return expression; }
 
 ReturnInstructionNode::ReturnInstructionNode(ExpressionNode* expression) : expression(expression) {}
 
 Node::Type ReturnInstructionNode::getType() const { return RETURN_INSTRUCTION; }
 
-ExpressionNode* ReturnInstructionNode::getExpression() { return expression; }
+ExpressionNode* ReturnInstructionNode::getExpression() const { return expression; }
 
 PrintInstructionNode::PrintInstructionNode(ExpressionNode* expression) : expression(expression) {}
 
 Node::Type PrintInstructionNode::getType() const { return PRINT_INSTRUCTION; }
 
-ExpressionNode* PrintInstructionNode::getExpression() { return expression; }
+ExpressionNode* PrintInstructionNode::getExpression() const { return expression; }
+
+IfNode::IfNode(ExpressionNode* condition, BlockNode* thenBlock, BlockNode* elseBlock)
+        : condition(condition), thenBlock(thenBlock), elseBlock(elseBlock) {}
+
+Node::Type IfNode::getType() const { return IF_STATEMENT; }
+
+ExpressionNode* IfNode::getCondition() const { return condition; }
+
+BlockNode* IfNode::getThenBlock() const { return thenBlock; }
+
+BlockNode* IfNode::getElseBlock() const { return elseBlock; }
+
+WhileNode::WhileNode(ExpressionNode* condition, BlockNode* block) : condition(condition), block(block) {}
+
+Node::Type WhileNode::getType() const { return WHILE_STATEMENT; }
+
+ExpressionNode* WhileNode::getCondition() const { return condition; }
+
+BlockNode* WhileNode::getBlock() const { return block; }

@@ -76,6 +76,8 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
             case PRINT_STATEMENT:
                 node = parsePrintStatement(currentInstruction);
                 break;
+//            case IF:
+//                node = parseIfStatement(currentInstruction);
             default:
                 // TODO: implement structures
                 break;
