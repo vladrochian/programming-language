@@ -28,6 +28,7 @@ class Parser {
     static VariableDeclarationNode* parseVariableDeclaration(const std::vector<Token>& tokenList);
     static ReturnInstructionNode* parseReturnStatement(const std::vector<Token>& tokenList);
     static PrintInstructionNode* parsePrintStatement(const std::vector<Token>& tokenList);
+    static ExpressionNode* parseCondition(const std::vector<Token>& tokenList);
 };
 
 #endif //BEAUTY_LANG_PARSER_H

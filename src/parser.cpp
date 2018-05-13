@@ -58,6 +58,9 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
         // TODO: multiple lines instruction
         auto currentInstruction = parseInstruction(iter);
         Node* node;
+        ExpressionNode* condition;
+        BlockNode* block1;
+        BlockNode* block2;
         auto it = currentInstruction.cbegin();
         switch (getInstructionType(currentInstruction)) {
             case EXPRESSION:
@@ -76,8 +79,26 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
             case PRINT_STATEMENT:
                 node = parsePrintStatement(currentInstruction);
                 break;
-//            case IF:
-//                node = parseIfStatement(currentInstruction);
+            case IF:
+                condition = parseCondition(currentInstruction);
+                if (iter->getType() != Token::INDENT || iter->getIntValue() <= baseIndent) {
+                    auto location = iter->getLocation();
+                    throw SyntaxError(location.first, location.second, "expected if block");
+                }
+                block1 = parseBlock(iter);
+                block2 = nullptr;
+                it = iter;
+                currentInstruction = parseInstruction(it);
+                if (getInstructionType(currentInstruction) == ELSE) {
+                    if (it->getType() != Token::INDENT || it->getIntValue() <= baseIndent) {
+                        auto location = it->getLocation();
+                        throw SyntaxError(location.first, location.second, "expected else block");
+                    }
+                    iter = it;
+                    block2 = parseBlock(iter);
+                }
+                node = new IfNode(condition, block1, block2);
+                break;
             default:
                 // TODO: implement structures
                 break;
@@ -136,4 +157,13 @@ PrintInstructionNode* Parser::parsePrintStatement(const std::vector<Token>& toke
     }
     ExpressionNode* expression = ExpressionParser::parse(iter);
     return new PrintInstructionNode(expression);
+}
+
+ExpressionNode* Parser::parseCondition(const std::vector<Token>& tokenList) {
+    auto iter = tokenList.begin() + 2;
+    if (iter->getType() == Token::LINE_FEED) {
+        auto location = iter->getLocation();
+        throw SyntaxError(location.first, location.second, "expected expression");
+    }
+    return ExpressionParser::parse(iter);
 }

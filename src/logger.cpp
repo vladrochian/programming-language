@@ -42,6 +42,7 @@ void Logger::print(const Token& token) {
 
 void Logger::print(Node* node, int indent) {
     auto varNode = dynamic_cast<VariableDeclarationNode*>(node);
+    auto ifNode = dynamic_cast<IfNode*>(node);
     printIndent(indent);
     switch (node->getType()) {
         case Node::BLOCK:
@@ -69,6 +70,17 @@ void Logger::print(Node* node, int indent) {
             std::printf("[PRN:");
             printExpression(dynamic_cast<PrintInstructionNode*>(node)->getExpression());
             std::printf("]\n");
+            break;
+        case Node::IF_STATEMENT:
+            std::printf("IF [CND:");
+            printExpression(ifNode->getCondition());
+            std::printf("]:\n");
+            print(ifNode->getThenBlock(), indent);
+            if (ifNode->getElseBlock() != nullptr) {
+                printIndent(indent);
+                std::printf("ELSE:\n");
+                print(ifNode->getElseBlock(), indent);
+            }
             break;
         default:
             std::printf("[NODE]\n");
