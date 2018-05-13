@@ -108,8 +108,27 @@ class UnaryOperatorNode : public ExpressionNode {
 class BinaryOperatorNode : public ExpressionNode {
   public:
     enum BinaryOperator {
-        PLUS,
-        MINUS
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        REMAINDER,
+        OR,
+        AND,
+        ASSIGN,
+        ADD_ASSIGN,
+        SUBTRACT_ASSIGN,
+        MULTIPLY_ASSIGN,
+        DIVIDE_ASSIGN,
+        REMAINDER_ASSIGN,
+        OR_ASSIGN,
+        AND_ASSIGN,
+        EQUAL,
+        DIFFERENT,
+        LESS,
+        GREATER,
+        LESS_EQUAL,
+        GREATER_EQUAL
     };
 
     BinaryOperatorNode(BinaryOperator op, ExpressionNode* leftOperand, ExpressionNode* rightOperand);

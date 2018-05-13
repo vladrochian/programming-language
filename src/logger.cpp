@@ -94,7 +94,38 @@ std::string Logger::toString(Keyword keyword) {
 }
 
 void Logger::printExpression(ExpressionNode* node) {
+    ExpressionNode* p1;
+    ExpressionNode* p2;
+    auto unOp = dynamic_cast<UnaryOperatorNode*>(node);
+    auto binOp = dynamic_cast<BinaryOperatorNode*>(node);
     switch (node->getType()) {
+        case Node::VARIABLE:
+            std::printf("(VAR:%s)", dynamic_cast<VariableNode*>(node)->getName().c_str());
+            break;
+        case Node::BOOLEAN_VALUE:
+            std::printf("(BOOL:%s)", dynamic_cast<BooleanValueNode*>(node)->getValue() ? "true" : "false");
+            break;
+        case Node::NUMBER_VALUE:
+            std::printf("(NMB:%f)", dynamic_cast<NumberValueNode*>(node)->getValue());
+            break;
+        case Node::STRING_VALUE:
+            std::printf("(STR:%s)", dynamic_cast<StringValueNode*>(node)->getValue().c_str());
+            break;
+        case Node::UNARY_OPERATOR:
+            p1 = unOp->getOperand();
+            std::printf("(%d ", unOp->getOperator());
+            printExpression(p1);
+            std::printf(")");
+            break;
+        case Node::BINARY_OPERATOR:
+            p1 = binOp->getLeftOperand();
+            p2 = binOp->getRightOperand();
+            std::printf("(%d ", binOp->getOperator());
+            printExpression(p1);
+            std::printf(" ");
+            printExpression(p2);
+            std::printf(")");
+            break;
         default:
             std::printf("(EXP)");
     }

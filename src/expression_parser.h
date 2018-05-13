@@ -20,6 +20,7 @@ class ExpressionParser {
     static ExpressionNode* parseMultiplicationLevel(TokenIter& iter);
     static ExpressionNode* parseUnaryOperatorsLevel(TokenIter& iter);
     static ExpressionNode* parseOperand(TokenIter& iter);
+    static bool isOnLevel(const std::vector<OperatorToken>& opList, const Token& token);
 };
 
 #endif //BEAUTY_LANG_EXPRESSION_PARSER_H

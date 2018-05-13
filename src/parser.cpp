@@ -86,7 +86,7 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
 }
 
 StandaloneExpressionNode* Parser::parseExpression(TokenIter& iter) {
-    return new StandaloneExpressionNode(ExpressionParser::parse(iter));
+    return new StandaloneExpressionNode(ExpressionParser::parse(++iter));
 }
 
 VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
