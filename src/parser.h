@@ -24,7 +24,7 @@ class Parser {
     static std::vector<Token> parseInstruction(TokenIter& iter);
     static Type getInstructionType(const std::vector<Token>& tokenList);
     static BlockNode* parseBlock(TokenIter& iter);
-    static ExpressionNode* parseExpression(TokenIter& iter);
+    static StandaloneExpressionNode* parseExpression(TokenIter& iter);
     static VariableDeclarationNode* parseVariableDeclaration(const std::vector<Token>& tokenList);
     static ReturnInstructionNode* parseReturnStatement(const std::vector<Token>& tokenList);
     static PrintInstructionNode* parsePrintStatement(const std::vector<Token>& tokenList);

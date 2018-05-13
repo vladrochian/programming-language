@@ -85,8 +85,8 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
     return new BlockNode(nodeList);
 }
 
-ExpressionNode* Parser::parseExpression(TokenIter& iter) {
-    return ExpressionParser::parse(iter);
+StandaloneExpressionNode* Parser::parseExpression(TokenIter& iter) {
+    return new StandaloneExpressionNode(ExpressionParser::parse(iter));
 }
 
 VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
@@ -122,7 +122,7 @@ ReturnInstructionNode* Parser::parseReturnStatement(const std::vector<Token>& to
         auto location = iter->getLocation();
         throw SyntaxError(location.first, location.second, "expected expression");
     }
-    ExpressionNode* expression = parseExpression(iter);
+    ExpressionNode* expression = ExpressionParser::parse(iter);
     return new ReturnInstructionNode(expression);
 }
 
@@ -132,6 +132,6 @@ PrintInstructionNode* Parser::parsePrintStatement(const std::vector<Token>& toke
         auto location = iter->getLocation();
         throw SyntaxError(location.first, location.second, "expected expression");
     }
-    ExpressionNode* expression = parseExpression(iter);
+    ExpressionNode* expression = ExpressionParser::parse(iter);
     return new PrintInstructionNode(expression);
 }

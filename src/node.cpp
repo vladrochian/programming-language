@@ -64,6 +64,12 @@ Node::Type VariableNode::getType() const { return VARIABLE; }
 
 std::string VariableNode::getName() const { return name; }
 
+StandaloneExpressionNode::StandaloneExpressionNode(ExpressionNode* expression) : expression(expression) {}
+
+Node::Type StandaloneExpressionNode::getType() const { return STANDALONE_EXPRESSION; }
+
+ExpressionNode* StandaloneExpressionNode::getExpression() { return expression; }
+
 ReturnInstructionNode::ReturnInstructionNode(ExpressionNode* expression) : expression(expression) {}
 
 Node::Type ReturnInstructionNode::getType() const { return RETURN_INSTRUCTION; }

@@ -41,23 +41,20 @@ void Logger::print(const Token& token) {
 }
 
 void Logger::print(Node* node, int indent) {
-    auto blockNode = dynamic_cast<BlockNode*>(node);
     auto varNode = dynamic_cast<VariableDeclarationNode*>(node);
-    auto retNode = dynamic_cast<ReturnInstructionNode*>(node);
-    auto prnNode = dynamic_cast<PrintInstructionNode*>(node);
     printIndent(indent);
     switch (node->getType()) {
         case Node::BLOCK:
             std::printf("[BLOCK:\n");
-            for (auto it : blockNode->getContent()) {
+            for (auto it : dynamic_cast<BlockNode*>(node)->getContent()) {
                 print(it, indent + 1);
             }
             printIndent(indent);
             std::printf("]\n");
             break;
-        case Node::EXPRESSION:
+        case Node::STANDALONE_EXPRESSION:
             std::printf("[EXP:");
-            printExpression(dynamic_cast<ExpressionNode*>(node));
+            printExpression(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression());
             std::printf("]\n");
             break;
         case Node::VARIABLE_DECLARATION:
@@ -65,12 +62,12 @@ void Logger::print(Node* node, int indent) {
             break;
         case Node::RETURN_INSTRUCTION:
             std::printf("[RET:");
-            printExpression(retNode->getExpression());
+            printExpression(dynamic_cast<ReturnInstructionNode*>(node)->getExpression());
             std::printf("]\n");
             break;
         case Node::PRINT_INSTRUCTION:
             std::printf("[PRN:");
-            printExpression(prnNode->getExpression());
+            printExpression(dynamic_cast<PrintInstructionNode*>(node)->getExpression());
             std::printf("]\n");
             break;
         default:

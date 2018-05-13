@@ -22,6 +22,7 @@ class Node {
         FUNCTION_CALL,
         UNARY_OPERATOR,
         BINARY_OPERATOR,
+        STANDALONE_EXPRESSION,
         RETURN_INSTRUCTION,
         PRINT_INSTRUCTION
     };
@@ -131,6 +132,16 @@ class VariableNode : public ExpressionNode {
 
   private:
     std::string name;
+};
+
+class StandaloneExpressionNode : public Node {
+  public:
+    explicit StandaloneExpressionNode(ExpressionNode* expression);
+    Type getType() const override;
+    ExpressionNode* getExpression();
+
+  private:
+    ExpressionNode* expression;
 };
 
 class ReturnInstructionNode : public Node {
