@@ -1,29 +1,47 @@
-//#ifndef BEAUTY_LANG_VALUE_H
-//#define BEAUTY_LANG_VALUE_H
-//
-//#include <string>
-//#include <map>
-//
-//class Value {
-//  public:
-//    typedef std::map<std::string, Value> ObjectValue;
-//    explicit Value(double numberValue) : type("number"), value(numberValue) {}
-//    explicit Value(bool booleanValue) : type("boolean"), value(booleanValue) {}
-//    explicit Value(std::string stringValue) : type("string"), value(std::move(stringValue)) {}
-//    explicit Value(ObjectValue objectValue, std::string type = "Object")
-//            : type(std::move(type)), value(std::move(objectValue)) {}
-//  private:
-//    union ValueUnion {
-//        explicit ValueUnion(double numberValue) : numberValue(numberValue) {}
-//        explicit ValueUnion(bool booleanValue) : booleanValue(booleanValue) {}
-//        explicit ValueUnion(std::string stringValue) : stringValue(std::move(stringValue)) {}
-//        explicit ValueUnion(ObjectValue objectValue) : objectValue(std::move(objectValue)) {}
-//        double numberValue;
-//        bool booleanValue;
-//        std::string stringValue;
-//        ObjectValue objectValue;
-//    } value;
-//    std::string type;
-//};
-//
-//#endif //BEAUTY_LANG_PRIMITIVE_VALUE_H
+#ifndef BEAUTY_LANG_VALUE_H
+#define BEAUTY_LANG_VALUE_H
+
+#include <string>
+#include <map>
+
+#include "node.h"
+#include "types.h"
+
+class Value {
+  public:
+    enum MemoryClass {
+        LVALUE,
+        RVALUE
+    };
+    virtual MemoryClass getMemoryClass() const = 0;
+    virtual PrimitiveType getType() const = 0;
+    virtual bool getBooleanValue() const = 0;
+    virtual double getNumberValue() const = 0;
+    virtual std::string getStringValue() const = 0;
+};
+
+class Rvalue : public Value {
+  public:
+    explicit Rvalue(ExpressionNode* node);
+    explicit Rvalue(bool booleanValue);
+    explicit Rvalue(double numberValue);
+    explicit Rvalue(std::string stringValue);
+    MemoryClass getMemoryClass() const override;
+    PrimitiveType getType() const override;
+    bool getBooleanValue() const override;
+    double getNumberValue() const override;
+    std::string getStringValue() const override;
+
+  private:
+    PrimitiveType type;
+    bool booleanValue;
+    double numberValue;
+    std::string stringValue;
+};
+
+class Lvalue : public Value {
+  public:
+    MemoryClass getMemoryClass() const override;
+};
+
+#endif //BEAUTY_LANG_PRIMITIVE_VALUE_H
