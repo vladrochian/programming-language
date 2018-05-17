@@ -41,7 +41,16 @@ class Rvalue : public Value {
 
 class Lvalue : public Value {
   public:
+    explicit Lvalue(const std::string& name);
     MemoryClass getMemoryClass() const override;
+    PrimitiveType getType() const override;
+    bool getBooleanValue() const override;
+    double getNumberValue() const override;
+    std::string getStringValue() const override;
+
+  private:
+    Rvalue getValue() const;
+    std::string name;
 };
 
 #endif //BEAUTY_LANG_PRIMITIVE_VALUE_H

@@ -1,5 +1,7 @@
 #include "value.h"
 
+#include "store.h"
+
 Rvalue::Rvalue(bool booleanValue) : type(TYPE_BOOLEAN), booleanValue(booleanValue) {}
 
 Rvalue::Rvalue(double numberValue) : type(TYPE_NUMBER), numberValue(numberValue) {}
@@ -35,4 +37,16 @@ double Rvalue::getNumberValue() const { return numberValue; }
 
 std::string Rvalue::getStringValue() const { return stringValue; }
 
+Lvalue::Lvalue(const std::string& name) : name(name) {}
+
 Value::MemoryClass Lvalue::getMemoryClass() const { return LVALUE; }
+
+PrimitiveType Lvalue::getType() const { return getValue().getType(); }
+
+bool Lvalue::getBooleanValue() const { return getValue().getBooleanValue(); }
+
+double Lvalue::getNumberValue() const { return getValue().getNumberValue(); }
+
+std::string Lvalue::getStringValue() const { return getValue().getStringValue(); }
+
+Rvalue Lvalue::getValue() const { return store.getValue(name); }
