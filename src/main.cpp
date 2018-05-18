@@ -3,6 +3,7 @@
 #include "lexer.h"
 #include "logger.h"
 #include "parser.h"
+#include "semantic_analyzer.h"
 
 int main(int argc, char **argv) {
     try {
@@ -13,6 +14,7 @@ int main(int argc, char **argv) {
         std::cout << "\n";
         auto fileTree = Parser::parseFile(tokenList);
         Logger::print(fileTree);
+        SemanticAnalyzer::analyze(fileTree);
     } catch (std::exception& e) {
         std::cout << e.what() << "\n";
     }

@@ -1,6 +1,43 @@
 #include "semantic_analyzer.h"
 
 #include "semantic_error.h"
+#include "store.h"
+
+void SemanticAnalyzer::analyze(Node* node) {
+    if (node->getType() == Node::BLOCK) {
+        auto blockNode = dynamic_cast<BlockNode*>(node);
+        store.newLevel();
+        for (auto it : blockNode->getContent()) {
+            analyze(it);
+        }
+        store.deleteLevel();
+    } else if (node->getType() == Node::STANDALONE_EXPRESSION) {
+        analyzeExpr(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression());
+    } else if (node->getType() == Node::RETURN_INSTRUCTION) {
+        analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression());
+    } else if (node->getType() == Node::PRINT_INSTRUCTION) {
+        analyzeExpr(dynamic_cast<PrintInstructionNode*>(node)->getExpression());
+    } else if (node->getType() == Node::VARIABLE_DECLARATION) {
+        auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
+        store.registerName(varDecNode->getVariableName(), new VariableData(varDecNode->getVariableType()));
+    } else if (node->getType() == Node::IF_STATEMENT) {
+        auto ifNode = dynamic_cast<IfNode*>(node);
+        analyzeExpr(ifNode->getCondition());
+        analyze(ifNode->getThenBlock());
+        if (ifNode->getElseBlock() != nullptr) {
+            analyze(ifNode->getElseBlock());
+        }
+    } else if (node->getType() == Node::WHILE_STATEMENT) {
+        auto whileNode = dynamic_cast<WhileNode*>(node);
+        analyzeExpr(whileNode->getCondition());
+        analyze(whileNode->getBlock());
+    }
+}
+
+void SemanticAnalyzer::analyzeExpr(ExpressionNode* node) {
+    getExpressionType(node);
+    getExpressionMemoryClass(node);
+}
 
 PrimitiveType SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
     auto unOpNode = dynamic_cast<UnaryOperatorNode*>(node);
@@ -18,6 +55,27 @@ PrimitiveType SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
             return getResultType(binOpNode->getOperator(), getExpressionType(binOpNode->getLeftOperand()),
                                  getExpressionType(binOpNode->getRightOperand()));
         case Node::VARIABLE:
+            return Lvalue(dynamic_cast<VariableNode*>(node)->getName()).getType();
+        default:
+            break;
+    }
+}
+
+Value::MemoryClass SemanticAnalyzer::getExpressionMemoryClass(ExpressionNode* node) {
+    auto unOpNode = dynamic_cast<UnaryOperatorNode*>(node);
+    auto binOpNode = dynamic_cast<BinaryOperatorNode*>(node);
+    switch (node->getType()) {
+        case Node::BOOLEAN_VALUE:
+        case Node::NUMBER_VALUE:
+        case Node::STRING_VALUE:
+            return Value::RVALUE;
+        case Node::UNARY_OPERATOR:
+            return getMemoryClass(unOpNode->getOperator(), getExpressionMemoryClass(unOpNode->getOperand()));
+        case Node::BINARY_OPERATOR:
+            return getMemoryClass(binOpNode->getOperator(), getExpressionMemoryClass(binOpNode->getLeftOperand()),
+                                  getExpressionMemoryClass(binOpNode->getRightOperand()));
+        case Node::VARIABLE:
+            return Value::LVALUE;
         default:
             break;
     }

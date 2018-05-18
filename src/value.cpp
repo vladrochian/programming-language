@@ -49,4 +49,6 @@ double Lvalue::getNumberValue() const { return getValue().getNumberValue(); }
 
 std::string Lvalue::getStringValue() const { return getValue().getStringValue(); }
 
+void Lvalue::setValue(const Value& other) { store.setValue(name, other); }
+
 Rvalue Lvalue::getValue() const { return store.getValue(name); }

@@ -20,22 +20,22 @@ void VariableData::setValue(double value) { numberValue = value; }
 
 void VariableData::setValue(const std::string& value) { stringValue = value; }
 
-void StackLevel::registerName(const std::string& name, const ObjectData& objectData) {
+void StackLevel::registerName(const std::string& name, ObjectData* objectData) {
     names[name] = objectData;
 }
 
-ObjectData* StackLevel::lookupName(const std::string& name) const {
+ObjectData* StackLevel::lookupName(const std::string& name) {
     if (names.count(name) == 1) {
-        return &names[name];
+        return names[name];
     }
     return nullptr;
 }
 
-void Store::registerName(const std::string& name, const ObjectData& objectData) {
+void Store::registerName(const std::string& name, ObjectData* objectData) {
     stk.back().registerName(name, objectData);
 }
 
-Rvalue Store::getValue(const std::string& name) const {
+Rvalue Store::getValue(const std::string& name) {
     auto var = getVariableData(name);
     switch (var->getVariableType()) {
         case TYPE_BOOLEAN:
@@ -69,7 +69,7 @@ void Store::newLevel() { stk.emplace_back(); }
 
 void Store::deleteLevel() { stk.pop_back(); }
 
-VariableData* Store::getVariableData(const std::string& name) const {
+VariableData* Store::getVariableData(const std::string& name) {
     for (auto it = stk.rbegin(); it != stk.rend(); ++it) {
         ObjectData* data = it->lookupName(name);
         if (data != nullptr) {
@@ -81,3 +81,5 @@ VariableData* Store::getVariableData(const std::string& name) const {
     }
     throw SemanticError(name + " is undefined in this context");
 }
+
+Store store;

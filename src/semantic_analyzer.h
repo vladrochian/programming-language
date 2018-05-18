@@ -10,6 +10,7 @@ class SemanticAnalyzer {
     static void analyze(Node* node);
 
   private:
+    static void analyzeExpr(ExpressionNode* node);
     static PrimitiveType getExpressionType(ExpressionNode* node);
     static Value::MemoryClass getExpressionMemoryClass(ExpressionNode* node);
     static PrimitiveType getResultType(UnaryOperatorNode::UnaryOperator op, PrimitiveType type);

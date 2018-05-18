@@ -15,7 +15,7 @@ class ObjectData {
         VARIABLE,
         FUNCTION
     };
-    virtual Type getType() const = 0;
+    virtual Type getType() const { }
 };
 
 class VariableData : public ObjectData {
@@ -39,26 +39,26 @@ class VariableData : public ObjectData {
 
 class StackLevel {
   public:
-    void registerName(const std::string& name, const ObjectData& objectData);
-    ObjectData* lookupName(const std::string& name) const;
+    void registerName(const std::string& name, ObjectData* objectData);
+    ObjectData* lookupName(const std::string& name);
 
   private:
-    std::map<std::string, ObjectData> names;
+    std::map<std::string, ObjectData*> names;
 };
 
 class Store {
   public:
-    void registerName(const std::string& name, const ObjectData& objectData);
-    Rvalue getValue(const std::string& name) const;
+    void registerName(const std::string& name, ObjectData* objectData);
+    Rvalue getValue(const std::string& name);
     void setValue(const std::string& name, const Value& value);
     void newLevel();
     void deleteLevel();
 
   private:
-    VariableData* getVariableData(const std::string& name) const;
+    VariableData* getVariableData(const std::string& name);
     std::vector<StackLevel> stk;
 };
 
-Store store;
+extern Store store;
 
 #endif //BEAUTY_LANG_STORE_H
