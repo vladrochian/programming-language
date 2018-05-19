@@ -47,7 +47,7 @@ class Lvalue : public Value {
     bool getBooleanValue() const override;
     double getNumberValue() const override;
     std::string getStringValue() const override;
-    void setValue(const Value& other);
+    void setValue(Value* other);
 
   private:
     Rvalue getValue() const;

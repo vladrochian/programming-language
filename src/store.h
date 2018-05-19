@@ -50,7 +50,7 @@ class Store {
   public:
     void registerName(const std::string& name, ObjectData* objectData);
     Rvalue getValue(const std::string& name);
-    void setValue(const std::string& name, const Value& value);
+    void setValue(const std::string& name, Value* value);
     void newLevel();
     void deleteLevel();
 

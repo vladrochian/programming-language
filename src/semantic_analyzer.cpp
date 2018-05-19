@@ -23,6 +23,9 @@ void SemanticAnalyzer::analyze(Node* node) {
     } else if (node->getType() == Node::IF_STATEMENT) {
         auto ifNode = dynamic_cast<IfNode*>(node);
         analyzeExpr(ifNode->getCondition());
+        if (getExpressionType(ifNode->getCondition()) != TYPE_BOOLEAN) {
+            throw SemanticError("if condition should have boolean type");
+        }
         analyze(ifNode->getThenBlock());
         if (ifNode->getElseBlock() != nullptr) {
             analyze(ifNode->getElseBlock());
@@ -30,6 +33,9 @@ void SemanticAnalyzer::analyze(Node* node) {
     } else if (node->getType() == Node::WHILE_STATEMENT) {
         auto whileNode = dynamic_cast<WhileNode*>(node);
         analyzeExpr(whileNode->getCondition());
+        if (getExpressionType(whileNode->getCondition()) != TYPE_BOOLEAN) {
+            throw SemanticError("while condition should have boolean type");
+        }
         analyze(whileNode->getBlock());
     }
 }
@@ -128,16 +134,16 @@ PrimitiveType SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator
             break;
         case BinaryOperatorNode::EQUAL:
         case BinaryOperatorNode::DIFFERENT:
-            if (lhs == TYPE_BOOLEAN && rhs == TYPE_BOOLEAN) return TYPE_BOOLEAN;
-            if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
-            if (lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_STRING;
+            if (lhs == TYPE_BOOLEAN && rhs == TYPE_BOOLEAN ||
+                lhs == TYPE_NUMBER && rhs == TYPE_NUMBER ||
+                lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_BOOLEAN;
             break;
         case BinaryOperatorNode::LESS:
         case BinaryOperatorNode::GREATER:
         case BinaryOperatorNode::LESS_EQUAL:
         case BinaryOperatorNode::GREATER_EQUAL:
-            if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
-            if (lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_STRING;
+            if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER ||
+                lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_BOOLEAN;
             break;
     }
     throw SemanticError("invalid operands");

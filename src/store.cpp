@@ -47,20 +47,20 @@ Rvalue Store::getValue(const std::string& name) {
     }
 }
 
-void Store::setValue(const std::string& name, const Value& value) {
+void Store::setValue(const std::string& name, Value* value) {
     auto var = getVariableData(name);
-    if (var->getVariableType() != value.getType()) {
+    if (var->getVariableType() != value->getType()) {
         throw SemanticError("incompatible type for assignment to " + name);
     }
-    switch (value.getType()) {
+    switch (value->getType()) {
         case TYPE_BOOLEAN:
-            var->setValue(value.getBooleanValue());
+            var->setValue(value->getBooleanValue());
             break;
         case TYPE_NUMBER:
-            var->setValue(value.getNumberValue());
+            var->setValue(value->getNumberValue());
             break;
         case TYPE_STRING:
-            var->setValue(value.getStringValue());
+            var->setValue(value->getStringValue());
             break;
     }
 }

@@ -1,18 +1,18 @@
 #ifndef BEAUTY_LANG_SEMANTIC_ERROR_H
 #define BEAUTY_LANG_SEMANTIC_ERROR_H
 
-#include <exception>
-#include <sstream>
-#include <string>
+#include "error.h"
 
-class SemanticError : public std::exception {
+class SemanticError : public Error {
   public:
     explicit SemanticError(std::string message) : message(std::move(message)) {}
 
+    std::string toString() const noexcept override {
+        return "Semantic error: " + message;
+    }
+
     const char* what() const noexcept override {
-        std::ostringstream os;
-        os << "Semantic error: " << message;
-        return os.str().c_str();
+        return toString().c_str();
     }
 
   private:
