@@ -87,17 +87,19 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
                 }
                 block1 = parseBlock(iter);
                 block2 = nullptr;
-                it = iter;
-                currentInstruction = parseInstruction(it);
-                if (currentInstruction[0].getType() == Token::INDENT &&
-                    currentInstruction[0].getIntValue() == baseIndent &&
-                    getInstructionType(currentInstruction) == ELSE) {
-                    if (it->getType() != Token::INDENT || it->getIntValue() <= baseIndent) {
-                        auto location = it->getLocation();
-                        throw SyntaxError(location.first, location.second, "expected else block");
+                if (iter->getType() != Token::END_OF_FILE) {
+                    it = iter;
+                    currentInstruction = parseInstruction(it);
+                    if (currentInstruction[0].getType() == Token::INDENT &&
+                        currentInstruction[0].getIntValue() == baseIndent &&
+                        getInstructionType(currentInstruction) == ELSE) {
+                        if (it->getType() != Token::INDENT || it->getIntValue() <= baseIndent) {
+                            auto location = it->getLocation();
+                            throw SyntaxError(location.first, location.second, "expected else block");
+                        }
+                        iter = it;
+                        block2 = parseBlock(iter);
                     }
-                    iter = it;
-                    block2 = parseBlock(iter);
                 }
                 node = new IfNode(condition, block1, block2);
                 break;
