@@ -12,3 +12,6 @@ bin/*
 
 # Ignore test source
 test_source.txt
+
+cmake-build-debug
+cmake-build-release
