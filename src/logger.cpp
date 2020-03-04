@@ -95,7 +95,7 @@ void Logger::print(Node* node, int indent) {
 }
 
 std::string Logger::toString(OperatorToken op) {
-    for (const auto& it : GET_OPERATOR) {
+    for (const auto& it : operatorTokenMap()) {
         if (it.second == op) {
             return it.first;
         }
@@ -104,7 +104,7 @@ std::string Logger::toString(OperatorToken op) {
 }
 
 std::string Logger::toString(Keyword keyword) {
-    for (const auto& it : GET_KEYWORD) {
+    for (const auto& it : keywordMap()) {
         if (it.second == keyword) {
             return it.first;
         }

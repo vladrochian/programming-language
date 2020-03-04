@@ -49,8 +49,8 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
                 tokenList.emplace_back(lineIndex, col, Token::BOOLEAN, false);
             } else if (s == "true") {
                 tokenList.emplace_back(lineIndex, col, Token::BOOLEAN, true);
-            } else if (GET_KEYWORD.count(s) == 1) {
-                tokenList.emplace_back(lineIndex, col, Token::KEYWORD, GET_KEYWORD.at(s));
+            } else if (keywordMap().count(s) == 1) {
+                tokenList.emplace_back(lineIndex, col, Token::KEYWORD, keywordMap().at(s));
             } else {
                 tokenList.emplace_back(lineIndex, col, Token::IDENTIFIER, s);
             }
@@ -66,7 +66,7 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
             if (s.empty()) {
                 throw SyntaxError(lineIndex, col, "unknown symbol");
             } else {
-                tokenList.emplace_back(lineIndex, col, Token::OPERATOR, GET_OPERATOR.at(s));
+                tokenList.emplace_back(lineIndex, col, Token::OPERATOR, operatorTokenMap().at(s));
             }
         }
         skipWhitespace(buffer, it);
@@ -123,7 +123,7 @@ std::string Lexer::getOperator(const std::string& buffer, std::string::const_ite
     while (it != buffer.end() && !std::isalnum(*it) && *it != '_' && !std::isspace(*it)) {
         ans += *(it++);
     }
-    while (!ans.empty() && GET_OPERATOR.count(ans) == 0) {
+    while (!ans.empty() && operatorTokenMap().count(ans) == 0) {
         ans.pop_back();
         --it;
     }

@@ -17,17 +17,7 @@ enum Keyword {
     KEYWORD_PRINT
 };
 
-const std::map<std::string, Keyword> GET_KEYWORD = std::map<std::string, Keyword>({
-        {"if", KEYWORD_IF},
-        {"else", KEYWORD_ELSE},
-        {"while", KEYWORD_WHILE},
-        {"for", KEYWORD_FOR},
-        {"boolean", KEYWORD_BOOLEAN},
-        {"number", KEYWORD_NUMBER},
-        {"string", KEYWORD_STRING},
-        {"def", KEYWORD_DEF},
-        {"return", KEYWORD_RETURN},
-        {"print", KEYWORD_PRINT}
-});
+void initializeKeywordMapping();
+const std::map<std::string, Keyword>& keywordMap();
 
 #endif //PROG_LANG_KEYWORD_H

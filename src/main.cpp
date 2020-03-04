@@ -8,7 +8,13 @@
 #include "semantic_analyzer.h"
 #include "vm.h"
 
+void initialize() {
+  initializeKeywordMapping();
+  initializeOperatorTokenMapping();
+}
+
 int main(int argc, char **argv) {
+  initialize();
     if (argc < 2) {
         std::cout << "Please specify a source file as argument.\n";
         return 0;
