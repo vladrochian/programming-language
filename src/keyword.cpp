@@ -18,7 +18,8 @@ void initializeKeywordMapping() {
       {"string", KEYWORD_STRING},
       {"def", KEYWORD_DEF},
       {"return", KEYWORD_RETURN},
-      {"print", KEYWORD_PRINT}
+      {"print", KEYWORD_PRINT},
+      {"read", KEYWORD_READ}
   };
   keywordMapping = std::make_unique<Map>(std::move(mp));
 }

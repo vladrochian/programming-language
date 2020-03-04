@@ -14,7 +14,8 @@ enum Keyword {
   KEYWORD_STRING,
   KEYWORD_DEF,
   KEYWORD_RETURN,
-  KEYWORD_PRINT
+  KEYWORD_PRINT,
+  KEYWORD_READ
 };
 
 void initializeKeywordMapping();

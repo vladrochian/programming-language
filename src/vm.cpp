@@ -32,6 +32,34 @@ void VirtualMachine::run(Node* node) {
         std::cout << getStringValue(value) << "\n";
         break;
     }
+  } else if (node->getType() == Node::READ_INSTRUCTION) {
+    auto value = evalExp(dynamic_cast<ReadInstructionNode*>(node)->getExpression().get());
+    bool booleanValue;
+    double numberValue;
+    std::string stringValue;
+    switch (value->getType()) {
+      case TYPE_BOOLEAN:
+        std::cin >> stringValue;
+        if (stringValue == "true" || stringValue == "TRUE" || stringValue == "1" || stringValue == "t" || stringValue == "T") {
+          booleanValue = true;
+        } else if (stringValue == "false" || stringValue == "FALSE" || stringValue == "0" || stringValue == "f" || stringValue == "F") {
+          booleanValue = false;
+        } else {
+          throw RuntimeError("invalid input for boolean type");
+        }
+        dynamic_cast<Lvalue*>(value.get())->setValue(std::make_unique<BooleanRvalue>(booleanValue));
+        break;
+      case TYPE_NUMBER:
+        if (!(std::cin >> numberValue)) {
+          throw RuntimeError("invalid input for number type");
+        }
+        dynamic_cast<Lvalue*>(value.get())->setValue(std::make_unique<NumberRvalue>(numberValue));
+        break;
+      case TYPE_STRING:
+        std::cin >> stringValue;
+        dynamic_cast<Lvalue*>(value.get())->setValue(std::make_unique<StringRvalue>(stringValue));
+        break;
+    }
   } else if (node->getType() == Node::VARIABLE_DECLARATION) {
     auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));

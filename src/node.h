@@ -26,6 +26,7 @@ class Node {
     STANDALONE_EXPRESSION,
     RETURN_INSTRUCTION,
     PRINT_INSTRUCTION,
+    READ_INSTRUCTION,
     IF_STATEMENT,
     WHILE_STATEMENT
   };
@@ -181,6 +182,16 @@ class ReturnInstructionNode : public Node {
 class PrintInstructionNode : public Node {
  public:
   explicit PrintInstructionNode(std::unique_ptr<ExpressionNode> expression);
+  Type getType() const override;
+  const std::unique_ptr<ExpressionNode>& getExpression() const;
+
+ private:
+  std::unique_ptr<ExpressionNode> expression;
+};
+
+class ReadInstructionNode : public Node {
+ public:
+  explicit ReadInstructionNode(std::unique_ptr<ExpressionNode> expression);
   Type getType() const override;
   const std::unique_ptr<ExpressionNode>& getExpression() const;
 

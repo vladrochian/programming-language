@@ -45,6 +45,8 @@ Parser::Type Parser::getInstructionType(const TokenList& tokenList) {
         return RETURN_STATEMENT;
       case KEYWORD_PRINT:
         return PRINT_STATEMENT;
+      case KEYWORD_READ:
+        return READ_STATEMENT;
       default:
         return EXPRESSION;
     }
@@ -79,6 +81,9 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         break;
       case PRINT_STATEMENT:
         node = parsePrintStatement(currentInstruction);
+        break;
+      case READ_STATEMENT:
+        node = parseReadStatement(currentInstruction);
         break;
       case IF:
         condition = parseCondition(currentInstruction);
@@ -169,6 +174,15 @@ std::unique_ptr<PrintInstructionNode> Parser::parsePrintStatement(const TokenLis
     throw SyntaxError(location.first, location.second, "expected expression");
   }
   return std::make_unique<PrintInstructionNode>(ExpressionParser::parse(iter));
+}
+
+std::unique_ptr<ReadInstructionNode> Parser::parseReadStatement(const TokenList& tokenList) {
+  auto iter = tokenList.begin() + 2;
+  if ((*iter)->getType() == Token::LINE_FEED) {
+    auto location = (*iter)->getLocation();
+    throw SyntaxError(location.first, location.second, "expected expression");
+  }
+  return std::make_unique<ReadInstructionNode>(ExpressionParser::parse(iter));
 }
 
 std::unique_ptr<ExpressionNode> Parser::parseCondition(const TokenList& tokenList) {

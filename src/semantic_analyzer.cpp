@@ -17,6 +17,12 @@ void SemanticAnalyzer::analyze(Node* node) {
     analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
   } else if (node->getType() == Node::PRINT_INSTRUCTION) {
     analyzeExpr(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
+  } else if (node->getType() == Node::READ_INSTRUCTION) {
+    auto exprToRead = dynamic_cast<ReadInstructionNode*>(node)->getExpression().get();
+    analyzeExpr(exprToRead);
+    if (getExpressionMemoryClass(exprToRead) == Value::RVALUE) {
+      throw SemanticError("rvalue as argument for read statement");
+    }
   } else if (node->getType() == Node::VARIABLE_DECLARATION) {
     auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));

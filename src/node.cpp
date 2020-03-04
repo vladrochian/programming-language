@@ -84,6 +84,13 @@ PrintInstructionNode::PrintInstructionNode(std::unique_ptr<ExpressionNode> expre
 
 Node::Type PrintInstructionNode::getType() const { return PRINT_INSTRUCTION; }
 
+ReadInstructionNode::ReadInstructionNode(std::unique_ptr<ExpressionNode> expression) : expression(
+    std::move(expression)) {}
+
+const std::unique_ptr<ExpressionNode>& ReadInstructionNode::getExpression() const { return expression; }
+
+Node::Type ReadInstructionNode::getType() const { return READ_INSTRUCTION; }
+
 const std::unique_ptr<ExpressionNode>& PrintInstructionNode::getExpression() const { return expression; }
 
 IfNode::IfNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> thenBlock,

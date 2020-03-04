@@ -19,7 +19,8 @@ class Parser {
     VARIABLE_DECLARATION,
     FUNCTION_DEFINITION,
     RETURN_STATEMENT,
-    PRINT_STATEMENT
+    PRINT_STATEMENT,
+    READ_STATEMENT
   };
   static TokenList parseInstruction(TokenIter& iter);
   static Type getInstructionType(const TokenList& tokenList);
@@ -28,6 +29,7 @@ class Parser {
   static std::unique_ptr<VariableDeclarationNode> parseVariableDeclaration(const TokenList& tokenList);
   static std::unique_ptr<ReturnInstructionNode> parseReturnStatement(const TokenList& tokenList);
   static std::unique_ptr<PrintInstructionNode> parsePrintStatement(const TokenList& tokenList);
+  static std::unique_ptr<ReadInstructionNode> parseReadStatement(const TokenList& tokenList);
   static std::unique_ptr<ExpressionNode> parseCondition(const TokenList& tokenList);
 };
 
