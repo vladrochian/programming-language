@@ -9,19 +9,20 @@
 #include "token.h"
 
 class ExpressionParser {
-  public:
-    static std::unique_ptr<ExpressionNode> parse(TokenIter& iter);
+ public:
+  static void initializeData();
+  static std::unique_ptr<ExpressionNode> parse(TokenIter& iter);
 
-  private:
-    static std::unique_ptr<ExpressionNode> parseAssignmentLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseOrLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseAndLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parsePredicateLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseAdditionLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseMultiplicationLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseUnaryOperatorsLevel(TokenIter& iter);
-    static std::unique_ptr<ExpressionNode> parseOperand(TokenIter& iter);
-    static bool isOnLevel(const std::vector<OperatorToken>& opList, const Token& token);
+ private:
+  static std::unique_ptr<ExpressionNode> parseAssignmentLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseOrLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseAndLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parsePredicateLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseAdditionLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseMultiplicationLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseUnaryOperatorsLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseOperand(TokenIter& iter);
+  static bool isOnLevel(const std::vector<OperatorToken>& opList, const Token& token);
 };
 
 #endif //PROG_LANG_EXPRESSION_PARSER_H

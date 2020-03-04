@@ -3,12 +3,12 @@
 #include <memory>
 
 namespace {
-typedef std::map<std::string, Keyword> MapType;
-std::unique_ptr<MapType> keywordMapping;
+typedef std::map<std::string, Keyword> Map;
+std::unique_ptr<Map> keywordMapping;
 }
 
 void initializeKeywordMapping() {
-  MapType mp {
+  Map mp{
       {"if", KEYWORD_IF},
       {"else", KEYWORD_ELSE},
       {"while", KEYWORD_WHILE},
@@ -20,9 +20,9 @@ void initializeKeywordMapping() {
       {"return", KEYWORD_RETURN},
       {"print", KEYWORD_PRINT}
   };
-  keywordMapping = std::make_unique<MapType>(std::move(mp));
+  keywordMapping = std::make_unique<Map>(std::move(mp));
 }
 
-const MapType& keywordMap() {
+const Map& keywordMap() {
   return *keywordMapping;
 }

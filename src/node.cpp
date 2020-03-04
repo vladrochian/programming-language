@@ -9,7 +9,7 @@ Node::Type BlockNode::getType() const { return BLOCK; }
 const std::vector<std::unique_ptr<Node>>& BlockNode::getContent() const { return content; }
 
 VariableDeclarationNode::VariableDeclarationNode(std::string name, PrimitiveType type)
-        : name(std::move(name)), type(type) {}
+    : name(std::move(name)), type(type) {}
 
 Node::Type VariableDeclarationNode::getType() const { return VARIABLE_DECLARATION; }
 
@@ -38,7 +38,7 @@ Node::Type StringValueNode::getType() const { return STRING_VALUE; }
 std::string StringValueNode::getValue() const { return value; }
 
 UnaryOperatorNode::UnaryOperatorNode(UnaryOperatorNode::UnaryOperator op, std::unique_ptr<ExpressionNode> operand)
-        : op(op), operand(std::move(operand)) {}
+    : op(op), operand(std::move(operand)) {}
 
 Node::Type UnaryOperatorNode::getType() const { return UNARY_OPERATOR; }
 
@@ -46,9 +46,10 @@ UnaryOperatorNode::UnaryOperator UnaryOperatorNode::getOperator() const { return
 
 const std::unique_ptr<ExpressionNode>& UnaryOperatorNode::getOperand() const { return operand; }
 
-BinaryOperatorNode::BinaryOperatorNode(BinaryOperatorNode::BinaryOperator op, std::unique_ptr<ExpressionNode> leftOperand,
+BinaryOperatorNode::BinaryOperatorNode(BinaryOperatorNode::BinaryOperator op,
+                                       std::unique_ptr<ExpressionNode> leftOperand,
                                        std::unique_ptr<ExpressionNode> rightOperand)
-        : op(op), leftOperand(std::move(leftOperand)), rightOperand(std::move(rightOperand)) {}
+    : op(op), leftOperand(std::move(leftOperand)), rightOperand(std::move(rightOperand)) {}
 
 Node::Type BinaryOperatorNode::getType() const { return BINARY_OPERATOR; }
 
@@ -64,26 +65,30 @@ Node::Type VariableNode::getType() const { return VARIABLE; }
 
 std::string VariableNode::getName() const { return name; }
 
-StandaloneExpressionNode::StandaloneExpressionNode(std::unique_ptr<ExpressionNode> expression) : expression(std::move(expression)) {}
+StandaloneExpressionNode::StandaloneExpressionNode(std::unique_ptr<ExpressionNode> expression) : expression(
+    std::move(expression)) {}
 
 Node::Type StandaloneExpressionNode::getType() const { return STANDALONE_EXPRESSION; }
 
 const std::unique_ptr<ExpressionNode>& StandaloneExpressionNode::getExpression() const { return expression; }
 
-ReturnInstructionNode::ReturnInstructionNode(std::unique_ptr<ExpressionNode> expression) : expression(std::move(expression)) {}
+ReturnInstructionNode::ReturnInstructionNode(std::unique_ptr<ExpressionNode> expression) : expression(
+    std::move(expression)) {}
 
 Node::Type ReturnInstructionNode::getType() const { return RETURN_INSTRUCTION; }
 
 const std::unique_ptr<ExpressionNode>& ReturnInstructionNode::getExpression() const { return expression; }
 
-PrintInstructionNode::PrintInstructionNode(std::unique_ptr<ExpressionNode> expression) : expression(std::move(expression)) {}
+PrintInstructionNode::PrintInstructionNode(std::unique_ptr<ExpressionNode> expression) : expression(
+    std::move(expression)) {}
 
 Node::Type PrintInstructionNode::getType() const { return PRINT_INSTRUCTION; }
 
 const std::unique_ptr<ExpressionNode>& PrintInstructionNode::getExpression() const { return expression; }
 
-IfNode::IfNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> thenBlock, std::unique_ptr<BlockNode> elseBlock)
-        : condition(std::move(condition)), thenBlock(std::move(thenBlock)), elseBlock(std::move(elseBlock)) {}
+IfNode::IfNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> thenBlock,
+               std::unique_ptr<BlockNode> elseBlock)
+    : condition(std::move(condition)), thenBlock(std::move(thenBlock)), elseBlock(std::move(elseBlock)) {}
 
 Node::Type IfNode::getType() const { return IF_STATEMENT; }
 
@@ -93,7 +98,8 @@ const std::unique_ptr<BlockNode>& IfNode::getThenBlock() const { return thenBloc
 
 const std::unique_ptr<BlockNode>& IfNode::getElseBlock() const { return elseBlock; }
 
-WhileNode::WhileNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> block) : condition(std::move(condition)), block(std::move(block)) {}
+WhileNode::WhileNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> block) : condition(
+    std::move(condition)), block(std::move(block)) {}
 
 Node::Type WhileNode::getType() const { return WHILE_STATEMENT; }
 

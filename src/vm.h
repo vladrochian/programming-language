@@ -5,11 +5,11 @@
 #include "value.h"
 
 class VirtualMachine {
-  public:
-    static void run(Node* node);
+ public:
+  static void run(Node* node);
 
-  private:
-    static std::unique_ptr<Value> evalExp(ExpressionNode* node);
+ private:
+  static std::unique_ptr<Value> evalExp(ExpressionNode* node);
 };
 
 #endif //PROG_LANG_VM_H

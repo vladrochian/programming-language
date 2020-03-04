@@ -9,13 +9,13 @@ Token::Token(int line, int col, Token::Type type, int value) : location(line, co
 Token::Token(int line, int col, Token::Type type, double value) : location(line, col), type(type), doubleValue(value) {}
 
 Token::Token(int line, int col, Token::Type type, std::string value)
-        : location(line, col), type(type), stringValue(std::move(value)) {}
+    : location(line, col), type(type), stringValue(std::move(value)) {}
 
 Token::Token(int line, int col, Token::Type type, OperatorToken value)
-        : location(line, col), type(type), operatorValue(value) {}
+    : location(line, col), type(type), operatorValue(value) {}
 
 Token::Token(int line, int col, Token::Type type, Keyword value)
-        : location(line, col), type(type), keywordValue(value) {}
+    : location(line, col), type(type), keywordValue(value) {}
 
 Token::Type Token::getType() const { return type; }
 

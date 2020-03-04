@@ -21,48 +21,48 @@ void VariableData::setValue(double value) { numberValue = value; }
 void VariableData::setValue(const std::string& value) { stringValue = value; }
 
 void StackLevel::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
-    names[name] = std::move(objectData);
+  names[name] = std::move(objectData);
 }
 
 ObjectData* StackLevel::lookupName(const std::string& name) {
-    if (names.count(name) == 1) {
-        return names[name].get();
-    }
-    return nullptr;
+  if (names.count(name) == 1) {
+    return names[name].get();
+  }
+  return nullptr;
 }
 
 void Store::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
-    stk.back().registerName(name, std::move(objectData));
+  stk.back().registerName(name, std::move(objectData));
 }
 
 Rvalue Store::getValue(const std::string& name) {
-    auto var = getVariableData(name);
-    switch (var->getVariableType()) {
-        case TYPE_BOOLEAN:
-            return Rvalue(var->getBooleanValue());
-        case TYPE_NUMBER:
-            return Rvalue(var->getNumberValue());
-        case TYPE_STRING:
-            return Rvalue(var->getStringValue());
-    }
+  auto var = getVariableData(name);
+  switch (var->getVariableType()) {
+    case TYPE_BOOLEAN:
+      return Rvalue(var->getBooleanValue());
+    case TYPE_NUMBER:
+      return Rvalue(var->getNumberValue());
+    case TYPE_STRING:
+      return Rvalue(var->getStringValue());
+  }
 }
 
 void Store::setValue(const std::string& name, std::unique_ptr<Value> value) {
-    auto var = getVariableData(name);
-    if (var->getVariableType() != value->getType()) {
-        throw SemanticError("incompatible type for assignment to " + name);
-    }
-    switch (value->getType()) {
-        case TYPE_BOOLEAN:
-            var->setValue(value->getBooleanValue());
-            break;
-        case TYPE_NUMBER:
-            var->setValue(value->getNumberValue());
-            break;
-        case TYPE_STRING:
-            var->setValue(value->getStringValue());
-            break;
-    }
+  auto var = getVariableData(name);
+  if (var->getVariableType() != value->getType()) {
+    throw SemanticError("incompatible type for assignment to " + name);
+  }
+  switch (value->getType()) {
+    case TYPE_BOOLEAN:
+      var->setValue(value->getBooleanValue());
+      break;
+    case TYPE_NUMBER:
+      var->setValue(value->getNumberValue());
+      break;
+    case TYPE_STRING:
+      var->setValue(value->getStringValue());
+      break;
+  }
 }
 
 void Store::newLevel() { stk.emplace_back(); }
@@ -70,16 +70,16 @@ void Store::newLevel() { stk.emplace_back(); }
 void Store::deleteLevel() { stk.pop_back(); }
 
 VariableData* Store::getVariableData(const std::string& name) {
-    for (auto it = stk.rbegin(); it != stk.rend(); ++it) {
-        ObjectData* data = it->lookupName(name);
-        if (data != nullptr) {
-            if (data->getType() != ObjectData::VARIABLE) {
-                throw SemanticError(name + " is not a variable");
-            }
-            return dynamic_cast<VariableData*>(data);
-        }
+  for (auto it = stk.rbegin(); it != stk.rend(); ++it) {
+    ObjectData* data = it->lookupName(name);
+    if (data != nullptr) {
+      if (data->getType() != ObjectData::VARIABLE) {
+        throw SemanticError(name + " is not a variable");
+      }
+      return dynamic_cast<VariableData*>(data);
     }
-    throw SemanticError(name + " is undefined in this context");
+  }
+  throw SemanticError(name + " is undefined in this context");
 }
 
 Store store;
