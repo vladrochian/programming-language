@@ -2,31 +2,13 @@
 
 #include "semantic_error.h"
 
-VariableData::VariableData(PrimitiveType type) : type(type), booleanValue(), numberValue(), stringValue() {}
-
-ObjectData::Type VariableData::getType() const { return VARIABLE; }
-
-PrimitiveType VariableData::getVariableType() const { return type; }
-
-bool VariableData::getBooleanValue() const { return booleanValue; }
-
-double VariableData::getNumberValue() const { return numberValue; }
-
-std::string VariableData::getStringValue() const { return stringValue; }
-
-void VariableData::setValue(bool value) { booleanValue = value; }
-
-void VariableData::setValue(double value) { numberValue = value; }
-
-void VariableData::setValue(const std::string& value) { stringValue = value; }
-
 void StackLevel::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
   names[name] = std::move(objectData);
 }
 
-ObjectData* StackLevel::lookupName(const std::string& name) {
+ObjectData* StackLevel::lookupName(const std::string& name) const {
   if (names.count(name) == 1) {
-    return names[name].get();
+    return names.at(name).get();
   }
   return nullptr;
 }
@@ -35,41 +17,23 @@ void Store::registerName(const std::string& name, std::unique_ptr<ObjectData> ob
   stk.back().registerName(name, std::move(objectData));
 }
 
-Rvalue Store::getValue(const std::string& name) {
-  auto var = getVariableData(name);
-  switch (var->getVariableType()) {
-    case TYPE_BOOLEAN:
-      return Rvalue(var->getBooleanValue());
-    case TYPE_NUMBER:
-      return Rvalue(var->getNumberValue());
-    case TYPE_STRING:
-      return Rvalue(var->getStringValue());
-  }
+const std::unique_ptr<Rvalue>& Store::getValue(const std::string& name) const {
+  return getVariableData(name)->getValue();
 }
 
-void Store::setValue(const std::string& name, std::unique_ptr<Value> value) {
+void Store::setValue(const std::string& name, std::unique_ptr<Rvalue> value) {
   auto var = getVariableData(name);
-  if (var->getVariableType() != value->getType()) {
+  if (var->getValue()->getType() != value->getType()) {
     throw SemanticError("incompatible type for assignment to " + name);
   }
-  switch (value->getType()) {
-    case TYPE_BOOLEAN:
-      var->setValue(value->getBooleanValue());
-      break;
-    case TYPE_NUMBER:
-      var->setValue(value->getNumberValue());
-      break;
-    case TYPE_STRING:
-      var->setValue(value->getStringValue());
-      break;
-  }
+  var->setValue(std::move(value));
 }
 
 void Store::newLevel() { stk.emplace_back(); }
 
 void Store::deleteLevel() { stk.pop_back(); }
 
-VariableData* Store::getVariableData(const std::string& name) {
+VariableData* Store::getVariableData(const std::string& name) const {
   for (auto it = stk.rbegin(); it != stk.rend(); ++it) {
     ObjectData* data = it->lookupName(name);
     if (data != nullptr) {

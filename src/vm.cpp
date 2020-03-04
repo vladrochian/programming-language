@@ -23,13 +23,13 @@ void VirtualMachine::run(Node* node) {
     auto value = evalExp(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
     switch (value->getType()) {
       case TYPE_BOOLEAN:
-        std::cout << (value->getBooleanValue() ? "true\n" : "false\n");
+        std::cout << (getBooleanValue(value) ? "true\n" : "false\n");
         break;
       case TYPE_NUMBER:
-        std::cout << value->getNumberValue() << "\n";
+        std::cout << getNumberValue(value) << "\n";
         break;
       case TYPE_STRING:
-        std::cout << value->getStringValue() << "\n";
+        std::cout << getStringValue(value) << "\n";
         break;
     }
   } else if (node->getType() == Node::VARIABLE_DECLARATION) {
@@ -37,23 +37,28 @@ void VirtualMachine::run(Node* node) {
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));
   } else if (node->getType() == Node::IF_STATEMENT) {
     auto ifNode = dynamic_cast<IfNode*>(node);
-    if (evalExp(ifNode->getCondition().get())->getBooleanValue()) {
+    if (getBooleanValue(evalExp(ifNode->getCondition().get()))) {
       run(ifNode->getThenBlock().get());
     } else if (ifNode->getElseBlock() != nullptr) {
       run(ifNode->getElseBlock().get());
     }
   } else if (node->getType() == Node::WHILE_STATEMENT) {
     auto whileNode = dynamic_cast<WhileNode*>(node);
-    while (evalExp(whileNode->getCondition().get())->getBooleanValue()) {
+    while (getBooleanValue(evalExp(whileNode->getCondition().get()))) {
       run(whileNode->getBlock().get());
     }
   }
 }
 
 std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
-  if (node->getType() == Node::BOOLEAN_VALUE || node->getType() == Node::NUMBER_VALUE ||
-      node->getType() == Node::STRING_VALUE) {
-    return std::make_unique<Rvalue>(node);
+  if (node->getType() == Node::BOOLEAN_VALUE) {
+    return std::make_unique<BooleanRvalue>(dynamic_cast<BooleanValueNode*>(node)->getValue());
+  }
+  if (node->getType() == Node::NUMBER_VALUE) {
+    return std::make_unique<NumberRvalue>(dynamic_cast<NumberValueNode*>(node)->getValue());
+  }
+  if (node->getType() == Node::STRING_VALUE) {
+    return std::make_unique<StringRvalue>(dynamic_cast<StringValueNode*>(node)->getValue());
   }
   if (node->getType() == Node::VARIABLE) {
     return std::make_unique<Lvalue>(dynamic_cast<VariableNode*>(node)->getName());
@@ -64,9 +69,9 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
       case UnaryOperatorNode::PLUS:
         return evalExp(unOpNode->getOperand().get());
       case UnaryOperatorNode::MINUS:
-        return std::make_unique<Rvalue>(-evalExp(unOpNode->getOperand().get())->getNumberValue());
+        return std::make_unique<NumberRvalue>(-getNumberValue(evalExp(unOpNode->getOperand().get())));
       case UnaryOperatorNode::NOT:
-        return std::make_unique<Rvalue>(!evalExp(unOpNode->getOperand().get())->getBooleanValue());
+        return std::make_unique<BooleanRvalue>(!getBooleanValue(evalExp(unOpNode->getOperand().get())));
     }
   }
   auto binOpNode = dynamic_cast<BinaryOperatorNode*>(node);
@@ -75,97 +80,121 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
   switch (binOpNode->getOperator()) {
     case BinaryOperatorNode::ADD:
       if (ls->getType() == TYPE_NUMBER) {
-        return std::make_unique<Rvalue>(ls->getNumberValue() + rs->getNumberValue());
+        return std::make_unique<NumberRvalue>(getNumberValue(ls) + getNumberValue(rs));
       }
-      return std::make_unique<Rvalue>(ls->getStringValue() + rs->getStringValue());
+      return std::make_unique<StringRvalue>(getStringValue(ls) + getStringValue(rs));
     case BinaryOperatorNode::SUBTRACT:
-      return std::make_unique<Rvalue>(ls->getNumberValue() - rs->getNumberValue());
+      return std::make_unique<NumberRvalue>(getNumberValue(ls) - getNumberValue(rs));
     case BinaryOperatorNode::MULTIPLY:
-      return std::make_unique<Rvalue>(ls->getNumberValue() * rs->getNumberValue());
+      return std::make_unique<NumberRvalue>(getNumberValue(ls) * getNumberValue(rs));
     case BinaryOperatorNode::DIVIDE:
-      if (rs->getNumberValue() == 0.0) {
+      if (getNumberValue(rs) == 0.0) {
         throw RuntimeError("division by 0");
       }
-      return std::make_unique<Rvalue>(ls->getNumberValue() / rs->getNumberValue());
+      return std::make_unique<NumberRvalue>(getNumberValue(ls) / getNumberValue(rs));
     case BinaryOperatorNode::REMAINDER:
-      return std::make_unique<Rvalue>(ls->getNumberValue() -
-                                      std::floor(ls->getNumberValue() / rs->getNumberValue()) * rs->getNumberValue());
+      return std::make_unique<NumberRvalue>(getNumberValue(ls) -
+                                            std::floor(getNumberValue(ls) / getNumberValue(rs)) * getNumberValue(rs));
     case BinaryOperatorNode::OR:
-      return std::make_unique<Rvalue>(ls->getBooleanValue() || rs->getBooleanValue());
+      return std::make_unique<BooleanRvalue>(getBooleanValue(ls) || getBooleanValue(rs));
     case BinaryOperatorNode::AND:
-      return std::make_unique<Rvalue>(ls->getBooleanValue() && rs->getBooleanValue());
+      return std::make_unique<BooleanRvalue>(getBooleanValue(ls) && getBooleanValue(rs));
     case BinaryOperatorNode::ASSIGN:
-      dynamic_cast<Lvalue*>(ls.get())->setValue(std::move(rs));
+      if (ls->getType() == TYPE_BOOLEAN) {
+        dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<BooleanRvalue>(getBooleanValue(rs)));
+      } else if (ls->getType() == TYPE_NUMBER) {
+        dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<NumberRvalue>(getNumberValue(rs)));
+      } else if (ls->getType() == TYPE_STRING) {
+        dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<StringRvalue>(getStringValue(rs)));
+      }
       return ls;
     case BinaryOperatorNode::ADD_ASSIGN:
-      dynamic_cast<Lvalue*>(ls.get())->setValue(
-          (ls->getType() == TYPE_NUMBER) ? std::make_unique<Rvalue>(ls->getNumberValue() + rs->getNumberValue())
-                                         : std::make_unique<Rvalue>(ls->getStringValue() + rs->getStringValue())
-      );
+      if (ls->getType() == TYPE_NUMBER) {
+        dynamic_cast<Lvalue*>(ls.get())->setValue(
+            std::make_unique<NumberRvalue>(getNumberValue(ls) + getNumberValue(rs)));
+      } else {
+        dynamic_cast<Lvalue*>(ls.get())->setValue(
+            std::make_unique<StringRvalue>(getStringValue(ls) + getStringValue(rs)));
+      }
       return ls;
     case BinaryOperatorNode::SUBTRACT_ASSIGN:
-      dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<Rvalue>(ls->getNumberValue() - rs->getNumberValue()));
+      dynamic_cast<Lvalue*>(ls.get())->setValue(
+          std::make_unique<NumberRvalue>(getNumberValue(ls) - getNumberValue(rs)));
       return ls;
     case BinaryOperatorNode::MULTIPLY_ASSIGN:
-      dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<Rvalue>(ls->getNumberValue() * rs->getNumberValue()));
+      dynamic_cast<Lvalue*>(ls.get())->setValue(
+          std::make_unique<NumberRvalue>(getNumberValue(ls) * getNumberValue(rs)));
       return ls;
     case BinaryOperatorNode::DIVIDE_ASSIGN:
-      if (rs->getNumberValue() == 0.0) {
+      if (getNumberValue(rs) == 0.0) {
         throw RuntimeError("division by 0");
       }
-      dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<Rvalue>(ls->getNumberValue() / rs->getNumberValue()));
+      dynamic_cast<Lvalue*>(ls.get())->setValue(
+          std::make_unique<NumberRvalue>(getNumberValue(ls) / getNumberValue(rs)));
       return ls;
     case BinaryOperatorNode::REMAINDER_ASSIGN:
-      dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<Rvalue>(ls->getNumberValue() -
-                                                                         std::floor(ls->getNumberValue() /
-                                                                                    rs->getNumberValue()) *
-                                                                         rs->getNumberValue()));
+      dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<NumberRvalue>(getNumberValue(ls) -
+                                                                               std::floor(getNumberValue(ls) /
+                                                                                          getNumberValue(rs)) *
+                                                                               getNumberValue(rs)));
       return ls;
     case BinaryOperatorNode::OR_ASSIGN:
       dynamic_cast<Lvalue*>(ls.get())->setValue(
-          std::make_unique<Rvalue>(ls->getBooleanValue() || rs->getBooleanValue()));
+          std::make_unique<BooleanRvalue>(getBooleanValue(ls) || getBooleanValue(rs)));
       return ls;
     case BinaryOperatorNode::AND_ASSIGN:
       dynamic_cast<Lvalue*>(ls.get())->setValue(
-          std::make_unique<Rvalue>(ls->getBooleanValue() && rs->getBooleanValue()));
+          std::make_unique<BooleanRvalue>(getBooleanValue(ls) && getBooleanValue(rs)));
       return ls;
     case BinaryOperatorNode::EQUAL:
       switch (ls->getType()) {
         case TYPE_BOOLEAN:
-          return std::make_unique<Rvalue>(ls->getBooleanValue() == rs->getBooleanValue());
+          return std::make_unique<BooleanRvalue>(getBooleanValue(ls) == getBooleanValue(rs));
         case TYPE_NUMBER:
-          return std::make_unique<Rvalue>(ls->getNumberValue() == rs->getNumberValue());
+          return std::make_unique<BooleanRvalue>(getNumberValue(ls) == getNumberValue(rs));
         case TYPE_STRING:
-          return std::make_unique<Rvalue>(ls->getStringValue() == rs->getStringValue());
+          return std::make_unique<BooleanRvalue>(getStringValue(ls) == getStringValue(rs));
       }
     case BinaryOperatorNode::DIFFERENT:
       switch (ls->getType()) {
         case TYPE_BOOLEAN:
-          return std::make_unique<Rvalue>(ls->getBooleanValue() != rs->getBooleanValue());
+          return std::make_unique<BooleanRvalue>(getBooleanValue(ls) != getBooleanValue(rs));
         case TYPE_NUMBER:
-          return std::make_unique<Rvalue>(ls->getNumberValue() != rs->getNumberValue());
+          return std::make_unique<BooleanRvalue>(getNumberValue(ls) != getNumberValue(rs));
         case TYPE_STRING:
-          return std::make_unique<Rvalue>(ls->getStringValue() != rs->getStringValue());
+          return std::make_unique<BooleanRvalue>(getStringValue(ls) != getStringValue(rs));
       }
     case BinaryOperatorNode::LESS:
       if (ls->getType() == TYPE_NUMBER) {
-        return std::make_unique<Rvalue>(ls->getNumberValue() < rs->getNumberValue());
+        return std::make_unique<BooleanRvalue>(getNumberValue(ls) < getNumberValue(rs));
       }
-      return std::make_unique<Rvalue>(ls->getStringValue() < rs->getStringValue());
+      return std::make_unique<BooleanRvalue>(getStringValue(ls) < getStringValue(rs));
     case BinaryOperatorNode::GREATER:
       if (ls->getType() == TYPE_NUMBER) {
-        return std::make_unique<Rvalue>(ls->getNumberValue() > rs->getNumberValue());
+        return std::make_unique<BooleanRvalue>(getNumberValue(ls) > getNumberValue(rs));
       }
-      return std::make_unique<Rvalue>(ls->getStringValue() > rs->getStringValue());
+      return std::make_unique<BooleanRvalue>(getStringValue(ls) > getStringValue(rs));
     case BinaryOperatorNode::LESS_EQUAL:
       if (ls->getType() == TYPE_NUMBER) {
-        return std::make_unique<Rvalue>(ls->getNumberValue() <= rs->getNumberValue());
+        return std::make_unique<BooleanRvalue>(getNumberValue(ls) <= getNumberValue(rs));
       }
-      return std::make_unique<Rvalue>(ls->getStringValue() <= rs->getStringValue());
+      return std::make_unique<BooleanRvalue>(getStringValue(ls) <= getStringValue(rs));
     case BinaryOperatorNode::GREATER_EQUAL:
       if (ls->getType() == TYPE_NUMBER) {
-        return std::make_unique<Rvalue>(ls->getNumberValue() >= rs->getNumberValue());
+        return std::make_unique<BooleanRvalue>(getNumberValue(ls) >= getNumberValue(rs));
       }
-      return std::make_unique<Rvalue>(ls->getStringValue() >= rs->getStringValue());
+      return std::make_unique<BooleanRvalue>(getStringValue(ls) >= getStringValue(rs));
   }
+}
+
+bool VirtualMachine::getBooleanValue(const std::unique_ptr<Value>& value) {
+  return dynamic_cast<const BooleanRvalue*>(value->getRvalue())->getValue();
+}
+
+double VirtualMachine::getNumberValue(const std::unique_ptr<Value>& value) {
+  return dynamic_cast<const NumberRvalue*>(value->getRvalue())->getValue();
+}
+
+std::string VirtualMachine::getStringValue(const std::unique_ptr<Value>& value) {
+  return dynamic_cast<const StringRvalue*>(value->getRvalue())->getValue();
 }

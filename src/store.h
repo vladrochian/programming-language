@@ -17,32 +17,38 @@ class ObjectData {
     FUNCTION
   };
 
-  virtual Type getType() const {}
+  virtual Type getType() const = 0;
 };
 
 class VariableData : public ObjectData {
  public:
-  explicit VariableData(PrimitiveType type);
-  Type getType() const override;
-  PrimitiveType getVariableType() const;
-  bool getBooleanValue() const;
-  double getNumberValue() const;
-  std::string getStringValue() const;
-  void setValue(bool value);
-  void setValue(double value);
-  void setValue(const std::string& value);
+  explicit VariableData(PrimitiveType type) : value() {
+    switch (type) {
+      case TYPE_BOOLEAN:
+        value = std::make_unique<BooleanRvalue>(false);
+        break;
+      case TYPE_NUMBER:
+        value = std::make_unique<NumberRvalue>(0.0);
+        break;
+      case TYPE_STRING:
+        value = std::make_unique<StringRvalue>(std::string());
+    }
+  }
+
+  Type getType() const override { return VARIABLE; }
+
+  const std::unique_ptr<Rvalue>& getValue() const { return value; }
+
+  void setValue(std::unique_ptr<Rvalue> v) { this->value = std::move(v); }
 
  private:
-  PrimitiveType type;
-  bool booleanValue;
-  double numberValue;
-  std::string stringValue;
+  std::unique_ptr<Rvalue> value;
 };
 
 class StackLevel {
  public:
   void registerName(const std::string& name, std::unique_ptr<ObjectData> objectData);
-  ObjectData* lookupName(const std::string& name);
+  ObjectData* lookupName(const std::string& name) const;
 
  private:
   std::map<std::string, std::unique_ptr<ObjectData>> names;
@@ -51,13 +57,13 @@ class StackLevel {
 class Store {
  public:
   void registerName(const std::string& name, std::unique_ptr<ObjectData> objectData);
-  Rvalue getValue(const std::string& name);
-  void setValue(const std::string& name, std::unique_ptr<Value> value);
+  const std::unique_ptr<Rvalue>& getValue(const std::string& name) const;
+  void setValue(const std::string& name, std::unique_ptr<Rvalue> value);
   void newLevel();
   void deleteLevel();
 
  private:
-  VariableData* getVariableData(const std::string& name);
+  VariableData* getVariableData(const std::string& name) const;
   std::vector<StackLevel> stk;
 };
 
