@@ -7,36 +7,36 @@ void SemanticAnalyzer::analyze(Node* node) {
     if (node->getType() == Node::BLOCK) {
         auto blockNode = dynamic_cast<BlockNode*>(node);
         store.newLevel();
-        for (auto it : blockNode->getContent()) {
-            analyze(it);
+        for (const auto& it : blockNode->getContent()) {
+            analyze(it.get());
         }
         store.deleteLevel();
     } else if (node->getType() == Node::STANDALONE_EXPRESSION) {
-        analyzeExpr(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression());
+        analyzeExpr(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression().get());
     } else if (node->getType() == Node::RETURN_INSTRUCTION) {
-        analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression());
+        analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
     } else if (node->getType() == Node::PRINT_INSTRUCTION) {
-        analyzeExpr(dynamic_cast<PrintInstructionNode*>(node)->getExpression());
+        analyzeExpr(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
     } else if (node->getType() == Node::VARIABLE_DECLARATION) {
         auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
-        store.registerName(varDecNode->getVariableName(), new VariableData(varDecNode->getVariableType()));
+        store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));
     } else if (node->getType() == Node::IF_STATEMENT) {
         auto ifNode = dynamic_cast<IfNode*>(node);
-        analyzeExpr(ifNode->getCondition());
-        if (getExpressionType(ifNode->getCondition()) != TYPE_BOOLEAN) {
+        analyzeExpr(ifNode->getCondition().get());
+        if (getExpressionType(ifNode->getCondition().get()) != TYPE_BOOLEAN) {
             throw SemanticError("if condition should have boolean type");
         }
-        analyze(ifNode->getThenBlock());
+        analyze(ifNode->getThenBlock().get());
         if (ifNode->getElseBlock() != nullptr) {
-            analyze(ifNode->getElseBlock());
+            analyze(ifNode->getElseBlock().get());
         }
     } else if (node->getType() == Node::WHILE_STATEMENT) {
         auto whileNode = dynamic_cast<WhileNode*>(node);
-        analyzeExpr(whileNode->getCondition());
-        if (getExpressionType(whileNode->getCondition()) != TYPE_BOOLEAN) {
+        analyzeExpr(whileNode->getCondition().get());
+        if (getExpressionType(whileNode->getCondition().get()) != TYPE_BOOLEAN) {
             throw SemanticError("while condition should have boolean type");
         }
-        analyze(whileNode->getBlock());
+        analyze(whileNode->getBlock().get());
     }
 }
 
@@ -56,10 +56,10 @@ PrimitiveType SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
         case Node::STRING_VALUE:
             return TYPE_STRING;
         case Node::UNARY_OPERATOR:
-            return getResultType(unOpNode->getOperator(), getExpressionType(unOpNode->getOperand()));
+            return getResultType(unOpNode->getOperator(), getExpressionType(unOpNode->getOperand().get()));
         case Node::BINARY_OPERATOR:
-            return getResultType(binOpNode->getOperator(), getExpressionType(binOpNode->getLeftOperand()),
-                                 getExpressionType(binOpNode->getRightOperand()));
+            return getResultType(binOpNode->getOperator(), getExpressionType(binOpNode->getLeftOperand().get()),
+                                 getExpressionType(binOpNode->getRightOperand().get()));
         case Node::VARIABLE:
             return Lvalue(dynamic_cast<VariableNode*>(node)->getName()).getType();
         default:
@@ -76,10 +76,10 @@ Value::MemoryClass SemanticAnalyzer::getExpressionMemoryClass(ExpressionNode* no
         case Node::STRING_VALUE:
             return Value::RVALUE;
         case Node::UNARY_OPERATOR:
-            return getMemoryClass(unOpNode->getOperator(), getExpressionMemoryClass(unOpNode->getOperand()));
+            return getMemoryClass(unOpNode->getOperator(), getExpressionMemoryClass(unOpNode->getOperand().get()));
         case Node::BINARY_OPERATOR:
-            return getMemoryClass(binOpNode->getOperator(), getExpressionMemoryClass(binOpNode->getLeftOperand()),
-                                  getExpressionMemoryClass(binOpNode->getRightOperand()));
+            return getMemoryClass(binOpNode->getOperator(), getExpressionMemoryClass(binOpNode->getLeftOperand().get()),
+                                  getExpressionMemoryClass(binOpNode->getRightOperand().get()));
         case Node::VARIABLE:
             return Value::LVALUE;
         default:
@@ -88,9 +88,9 @@ Value::MemoryClass SemanticAnalyzer::getExpressionMemoryClass(ExpressionNode* no
 }
 
 PrimitiveType SemanticAnalyzer::getResultType(UnaryOperatorNode::UnaryOperator op, PrimitiveType type) {
-    if (op == UnaryOperatorNode::NOT && type == TYPE_BOOLEAN ||
-        op == UnaryOperatorNode::PLUS && type == TYPE_NUMBER ||
-        op == UnaryOperatorNode::MINUS && type == TYPE_NUMBER) {
+    if ((op == UnaryOperatorNode::NOT && type == TYPE_BOOLEAN) ||
+        (op == UnaryOperatorNode::PLUS && type == TYPE_NUMBER) ||
+        (op == UnaryOperatorNode::MINUS && type == TYPE_NUMBER)) {
         return type;
     }
     throw SemanticError("invalid operand");
@@ -134,16 +134,16 @@ PrimitiveType SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator
             break;
         case BinaryOperatorNode::EQUAL:
         case BinaryOperatorNode::DIFFERENT:
-            if (lhs == TYPE_BOOLEAN && rhs == TYPE_BOOLEAN ||
-                lhs == TYPE_NUMBER && rhs == TYPE_NUMBER ||
-                lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_BOOLEAN;
+            if ((lhs == TYPE_BOOLEAN && rhs == TYPE_BOOLEAN) ||
+                (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) ||
+                (lhs == TYPE_STRING && rhs == TYPE_STRING)) return TYPE_BOOLEAN;
             break;
         case BinaryOperatorNode::LESS:
         case BinaryOperatorNode::GREATER:
         case BinaryOperatorNode::LESS_EQUAL:
         case BinaryOperatorNode::GREATER_EQUAL:
-            if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER ||
-                lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_BOOLEAN;
+            if ((lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) ||
+                (lhs == TYPE_STRING && rhs == TYPE_STRING)) return TYPE_BOOLEAN;
             break;
     }
     throw SemanticError("invalid operands");

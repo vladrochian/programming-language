@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_TOKEN_H
-#define BEAUTY_LANG_TOKEN_H
+#ifndef PROG_LANG_TOKEN_H
+#define PROG_LANG_TOKEN_H
 
 #include <string>
 #include <vector>
@@ -51,4 +51,4 @@ class Token {
 
 typedef std::vector<Token>::const_iterator TokenIter;
 
-#endif //BEAUTY_LANG_TOKEN_H
+#endif //PROG_LANG_TOKEN_H

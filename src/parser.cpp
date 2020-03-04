@@ -4,9 +4,9 @@
 #include "syntax_error.h"
 #include "types.h"
 
-BlockNode* Parser::parseFile(const std::vector<Token>& file) {
+std::unique_ptr<BlockNode> Parser::parseFile(const std::vector<Token>& file) {
     auto iter = file.begin();
-    BlockNode* node = parseBlock(iter);
+    auto node = parseBlock(iter);
     if (iter->getType() != Token::END_OF_FILE) {
         auto location = iter->getLocation();
         throw SyntaxError(location.first, location.second, "expected end of file");
@@ -51,16 +51,16 @@ Parser::Type Parser::getInstructionType(const std::vector<Token>& tokenList) {
     return EXPRESSION;
 }
 
-BlockNode* Parser::parseBlock(TokenIter& iter) {
+std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
     int baseIndent = iter->getIntValue();
-    std::vector<Node*> nodeList;
+    std::vector<std::unique_ptr<Node>> nodeList;
     while (iter->getType() != Token::END_OF_FILE && iter->getIntValue() == baseIndent) {
         // TODO: multiple lines instruction
         auto currentInstruction = parseInstruction(iter);
-        Node* node;
-        ExpressionNode* condition;
-        BlockNode* block1;
-        BlockNode* block2;
+        std::unique_ptr<Node> node;
+        std::unique_ptr<ExpressionNode> condition;
+        std::unique_ptr<BlockNode> block1;
+        std::unique_ptr<BlockNode> block2;
         auto it = currentInstruction.cbegin();
         switch (getInstructionType(currentInstruction)) {
             case EXPRESSION:
@@ -101,7 +101,7 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
                         block2 = parseBlock(iter);
                     }
                 }
-                node = new IfNode(condition, block1, block2);
+                node = std::make_unique<IfNode>(std::move(condition), std::move(block1), std::move(block2));
                 break;
             case WHILE:
                 condition = parseCondition(currentInstruction);
@@ -110,22 +110,22 @@ BlockNode* Parser::parseBlock(TokenIter& iter) {
                     throw SyntaxError(location.first, location.second, "expected while block");
                 }
                 block1 = parseBlock(iter);
-                node = new WhileNode(condition, block1);
+                node = std::make_unique<WhileNode>(std::move(condition), std::move(block1));
                 break;
             default:
                 // TODO: implement structures
                 break;
         }
-        nodeList.push_back(node);
+        nodeList.push_back(std::move(node));
     }
-    return new BlockNode(nodeList);
+    return std::make_unique<BlockNode>(std::move(nodeList));
 }
 
-StandaloneExpressionNode* Parser::parseExpression(TokenIter& iter) {
-    return new StandaloneExpressionNode(ExpressionParser::parse(++iter));
+std::unique_ptr<StandaloneExpressionNode> Parser::parseExpression(TokenIter& iter) {
+    return std::make_unique<StandaloneExpressionNode>(ExpressionParser::parse(++iter));
 }
 
-VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
+std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const std::vector<Token>& tokenList) {
     // TODO: initialization
     std::string id = tokenList[1].getStringValue();
     PrimitiveType type;
@@ -145,34 +145,32 @@ VariableDeclarationNode* Parser::parseVariableDeclaration(const std::vector<Toke
                 throw SyntaxError(location.first, location.second, "expected type name");
         }
     } else {
-        // object; implement this
+        // TODO: object; implement this
         auto location = tokenList[3].getLocation();
         throw SyntaxError(location.first, location.second, "expected type name");
     }
-    return new VariableDeclarationNode(id, type);
+    return std::make_unique<VariableDeclarationNode>(id, type);
 }
 
-ReturnInstructionNode* Parser::parseReturnStatement(const std::vector<Token>& tokenList) {
+std::unique_ptr<ReturnInstructionNode> Parser::parseReturnStatement(const std::vector<Token>& tokenList) {
     auto iter = tokenList.begin() + 2;
     if (iter->getType() == Token::LINE_FEED) {
         auto location = iter->getLocation();
         throw SyntaxError(location.first, location.second, "expected expression");
     }
-    ExpressionNode* expression = ExpressionParser::parse(iter);
-    return new ReturnInstructionNode(expression);
+    return std::make_unique<ReturnInstructionNode>(ExpressionParser::parse(iter));
 }
 
-PrintInstructionNode* Parser::parsePrintStatement(const std::vector<Token>& tokenList) {
+std::unique_ptr<PrintInstructionNode> Parser::parsePrintStatement(const std::vector<Token>& tokenList) {
     auto iter = tokenList.begin() + 2;
     if (iter->getType() == Token::LINE_FEED) {
         auto location = iter->getLocation();
         throw SyntaxError(location.first, location.second, "expected expression");
     }
-    ExpressionNode* expression = ExpressionParser::parse(iter);
-    return new PrintInstructionNode(expression);
+    return std::make_unique<PrintInstructionNode>(ExpressionParser::parse(iter));
 }
 
-ExpressionNode* Parser::parseCondition(const std::vector<Token>& tokenList) {
+std::unique_ptr<ExpressionNode> Parser::parseCondition(const std::vector<Token>& tokenList) {
     auto iter = tokenList.begin() + 2;
     if (iter->getType() == Token::LINE_FEED) {
         auto location = iter->getLocation();

@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_SEMANTIC_ANALYZER_H
-#define BEAUTY_LANG_SEMANTIC_ANALYZER_H
+#ifndef PROG_LANG_SEMANTIC_ANALYZER_H
+#define PROG_LANG_SEMANTIC_ANALYZER_H
 
 #include "node.h"
 #include "types.h"
@@ -20,4 +20,4 @@ class SemanticAnalyzer {
                                              Value::MemoryClass lhs, Value::MemoryClass rhs);
 };
 
-#endif //BEAUTY_LANG_SEMANTIC_ANALYZER_H
+#endif //PROG_LANG_SEMANTIC_ANALYZER_H

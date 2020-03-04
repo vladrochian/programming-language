@@ -1,6 +1,7 @@
-#ifndef BEAUTY_LANG_EXPRESSION_PARSER_H
-#define BEAUTY_LANG_EXPRESSION_PARSER_H
+#ifndef PROG_LANG_EXPRESSION_PARSER_H
+#define PROG_LANG_EXPRESSION_PARSER_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -9,18 +10,18 @@
 
 class ExpressionParser {
   public:
-    static ExpressionNode* parse(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parse(TokenIter& iter);
 
   private:
-    static ExpressionNode* parseAssignmentLevel(TokenIter& iter);
-    static ExpressionNode* parseOrLevel(TokenIter& iter);
-    static ExpressionNode* parseAndLevel(TokenIter& iter);
-    static ExpressionNode* parsePredicateLevel(TokenIter& iter);
-    static ExpressionNode* parseAdditionLevel(TokenIter& iter);
-    static ExpressionNode* parseMultiplicationLevel(TokenIter& iter);
-    static ExpressionNode* parseUnaryOperatorsLevel(TokenIter& iter);
-    static ExpressionNode* parseOperand(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseAssignmentLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseOrLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseAndLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parsePredicateLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseAdditionLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseMultiplicationLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseUnaryOperatorsLevel(TokenIter& iter);
+    static std::unique_ptr<ExpressionNode> parseOperand(TokenIter& iter);
     static bool isOnLevel(const std::vector<OperatorToken>& opList, const Token& token);
 };
 
-#endif //BEAUTY_LANG_EXPRESSION_PARSER_H
+#endif //PROG_LANG_EXPRESSION_PARSER_H

@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_VALUE_H
-#define BEAUTY_LANG_VALUE_H
+#ifndef PROG_LANG_VALUE_H
+#define PROG_LANG_VALUE_H
 
 #include <string>
 #include <map>
@@ -41,17 +41,17 @@ class Rvalue : public Value {
 
 class Lvalue : public Value {
   public:
-    explicit Lvalue(const std::string& name);
+    explicit Lvalue(std::string name);
     MemoryClass getMemoryClass() const override;
     PrimitiveType getType() const override;
     bool getBooleanValue() const override;
     double getNumberValue() const override;
     std::string getStringValue() const override;
-    void setValue(Value* other);
+    void setValue(std::unique_ptr<Value> other);
 
   private:
     Rvalue getValue() const;
     std::string name;
 };
 
-#endif //BEAUTY_LANG_PRIMITIVE_VALUE_H
+#endif //PROG_LANG_PRIMITIVE_VALUE_H

@@ -1,8 +1,9 @@
-#ifndef BEAUTY_LANG_STORE_H
-#define BEAUTY_LANG_STORE_H
+#ifndef PROG_LANG_STORE_H
+#define PROG_LANG_STORE_H
 
 #include <exception>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,18 +40,18 @@ class VariableData : public ObjectData {
 
 class StackLevel {
   public:
-    void registerName(const std::string& name, ObjectData* objectData);
+    void registerName(const std::string& name, std::unique_ptr<ObjectData> objectData);
     ObjectData* lookupName(const std::string& name);
 
   private:
-    std::map<std::string, ObjectData*> names;
+    std::map<std::string, std::unique_ptr<ObjectData>> names;
 };
 
 class Store {
   public:
-    void registerName(const std::string& name, ObjectData* objectData);
+    void registerName(const std::string& name, std::unique_ptr<ObjectData> objectData);
     Rvalue getValue(const std::string& name);
-    void setValue(const std::string& name, Value* value);
+    void setValue(const std::string& name, std::unique_ptr<Value> value);
     void newLevel();
     void deleteLevel();
 
@@ -61,4 +62,4 @@ class Store {
 
 extern Store store;
 
-#endif //BEAUTY_LANG_STORE_H
+#endif //PROG_LANG_STORE_H

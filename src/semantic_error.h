@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_SEMANTIC_ERROR_H
-#define BEAUTY_LANG_SEMANTIC_ERROR_H
+#ifndef PROG_LANG_SEMANTIC_ERROR_H
+#define PROG_LANG_SEMANTIC_ERROR_H
 
 #include "error.h"
 
@@ -19,4 +19,4 @@ class SemanticError : public Error {
     std::string message;
 };
 
-#endif //BEAUTY_LANG_SEMANTIC_ERROR_H
+#endif //PROG_LANG_SEMANTIC_ERROR_H

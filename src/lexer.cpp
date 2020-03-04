@@ -86,7 +86,7 @@ int Lexer::skipWhitespace(const std::string& buffer, std::string::const_iterator
 
 std::string Lexer::getWord(const std::string& buffer, std::string::const_iterator& it) {
     std::string ans;
-    while (it != buffer.end() && std::isalnum(*it) || *it == '_') {
+    while ((it != buffer.end() && std::isalnum(*it)) || *it == '_') {
         ans += *(it++);
     }
     return ans;

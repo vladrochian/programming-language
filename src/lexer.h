@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_LEXER_H
-#define BEAUTY_LANG_LEXER_H
+#ifndef PROG_LANG_LEXER_H
+#define PROG_LANG_LEXER_H
 
 #include <string>
 #include <vector>
@@ -19,4 +19,4 @@ class Lexer {
     static std::string getOperator(const std::string& buffer, std::string::const_iterator& it);
 };
 
-#endif //BEAUTY_LANG_LEXER_H
+#endif //PROG_LANG_LEXER_H

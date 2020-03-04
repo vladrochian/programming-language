@@ -48,15 +48,15 @@ void Logger::print(Node* node, int indent) {
     switch (node->getType()) {
         case Node::BLOCK:
             std::printf("[BLOCK:\n");
-            for (auto it : dynamic_cast<BlockNode*>(node)->getContent()) {
-                print(it, indent + 1);
+            for (const auto& it : dynamic_cast<BlockNode*>(node)->getContent()) {
+                print(it.get(), indent + 1);
             }
             printIndent(indent);
             std::printf("]\n");
             break;
         case Node::STANDALONE_EXPRESSION:
             std::printf("[EXP:");
-            printExpression(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression());
+            printExpression(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression().get());
             std::printf("]\n");
             break;
         case Node::VARIABLE_DECLARATION:
@@ -64,30 +64,30 @@ void Logger::print(Node* node, int indent) {
             break;
         case Node::RETURN_INSTRUCTION:
             std::printf("[RET:");
-            printExpression(dynamic_cast<ReturnInstructionNode*>(node)->getExpression());
+            printExpression(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
             std::printf("]\n");
             break;
         case Node::PRINT_INSTRUCTION:
             std::printf("[PRN:");
-            printExpression(dynamic_cast<PrintInstructionNode*>(node)->getExpression());
+            printExpression(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
             std::printf("]\n");
             break;
         case Node::IF_STATEMENT:
             std::printf("IF [CND:");
-            printExpression(ifNode->getCondition());
+            printExpression(ifNode->getCondition().get());
             std::printf("]:\n");
-            print(ifNode->getThenBlock(), indent);
+            print(ifNode->getThenBlock().get(), indent);
             if (ifNode->getElseBlock() != nullptr) {
                 printIndent(indent);
                 std::printf("ELSE:\n");
-                print(ifNode->getElseBlock(), indent);
+                print(ifNode->getElseBlock().get(), indent);
             }
             break;
         case Node::WHILE_STATEMENT:
             std::printf("WHILE [CND:");
-            printExpression(whlNode->getCondition());
+            printExpression(whlNode->getCondition().get());
             std::printf("]:\n");
-            print(whlNode->getBlock(), indent);
+            print(whlNode->getBlock().get(), indent);
             break;
         default:
             std::printf("[NODE]\n");
@@ -131,14 +131,14 @@ void Logger::printExpression(ExpressionNode* node) {
             std::printf("(STR:%s)", dynamic_cast<StringValueNode*>(node)->getValue().c_str());
             break;
         case Node::UNARY_OPERATOR:
-            p1 = unOp->getOperand();
+            p1 = unOp->getOperand().get();
             std::printf("(%d ", unOp->getOperator());
             printExpression(p1);
             std::printf(")");
             break;
         case Node::BINARY_OPERATOR:
-            p1 = binOp->getLeftOperand();
-            p2 = binOp->getRightOperand();
+            p1 = binOp->getLeftOperand().get();
+            p2 = binOp->getRightOperand().get();
             std::printf("(%d ", binOp->getOperator());
             printExpression(p1);
             std::printf(" ");

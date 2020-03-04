@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_OPERATOR_H
-#define BEAUTY_LANG_OPERATOR_H
+#ifndef PROG_LANG_OPERATOR_H
+#define PROG_LANG_OPERATOR_H
 
 #include <map>
 #include <string>
@@ -72,4 +72,4 @@ const std::map<std::string, OperatorToken> GET_OPERATOR = {
         {"!=", OP_IS_DIFFERENT},
 };
 
-#endif //BEAUTY_LANG_OPERATOR_H
+#endif //PROG_LANG_OPERATOR_H

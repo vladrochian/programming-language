@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_KEYWORD_H
-#define BEAUTY_LANG_KEYWORD_H
+#ifndef PROG_LANG_KEYWORD_H
+#define PROG_LANG_KEYWORD_H
 
 #include <map>
 #include <string>
@@ -30,4 +30,4 @@ const std::map<std::string, Keyword> GET_KEYWORD = std::map<std::string, Keyword
         {"print", KEYWORD_PRINT}
 });
 
-#endif //BEAUTY_LANG_KEYWORD_H
+#endif //PROG_LANG_KEYWORD_H

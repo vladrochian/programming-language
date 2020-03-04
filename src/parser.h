@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_PARSER_H
-#define BEAUTY_LANG_PARSER_H
+#ifndef PROG_LANG_PARSER_H
+#define PROG_LANG_PARSER_H
 
 #include <vector>
 
@@ -8,7 +8,7 @@
 
 class Parser {
   public:
-    static BlockNode* parseFile(const std::vector<Token>& file);
+    static std::unique_ptr<BlockNode> parseFile(const std::vector<Token>& file);
   private:
     enum Type {
         EXPRESSION,
@@ -23,12 +23,12 @@ class Parser {
     };
     static std::vector<Token> parseInstruction(TokenIter& iter);
     static Type getInstructionType(const std::vector<Token>& tokenList);
-    static BlockNode* parseBlock(TokenIter& iter);
-    static StandaloneExpressionNode* parseExpression(TokenIter& iter);
-    static VariableDeclarationNode* parseVariableDeclaration(const std::vector<Token>& tokenList);
-    static ReturnInstructionNode* parseReturnStatement(const std::vector<Token>& tokenList);
-    static PrintInstructionNode* parsePrintStatement(const std::vector<Token>& tokenList);
-    static ExpressionNode* parseCondition(const std::vector<Token>& tokenList);
+    static std::unique_ptr<BlockNode> parseBlock(TokenIter& iter);
+    static std::unique_ptr<StandaloneExpressionNode> parseExpression(TokenIter& iter);
+    static std::unique_ptr<VariableDeclarationNode> parseVariableDeclaration(const std::vector<Token>& tokenList);
+    static std::unique_ptr<ReturnInstructionNode> parseReturnStatement(const std::vector<Token>& tokenList);
+    static std::unique_ptr<PrintInstructionNode> parsePrintStatement(const std::vector<Token>& tokenList);
+    static std::unique_ptr<ExpressionNode> parseCondition(const std::vector<Token>& tokenList);
 };
 
-#endif //BEAUTY_LANG_PARSER_H
+#endif //PROG_LANG_PARSER_H

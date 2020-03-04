@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_LOGGER_H
-#define BEAUTY_LANG_LOGGER_H
+#ifndef PROG_LANG_LOGGER_H
+#define PROG_LANG_LOGGER_H
 
 #include <string>
 
@@ -20,4 +20,4 @@ class Logger {
     static void printIndent(int size);
 };
 
-#endif //BEAUTY_LANG_LOGGER_H
+#endif //PROG_LANG_LOGGER_H

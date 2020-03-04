@@ -1,6 +1,7 @@
-#ifndef BEAUTY_LANG_NODE_H
-#define BEAUTY_LANG_NODE_H
+#ifndef PROG_LANG_NODE_H
+#define PROG_LANG_NODE_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,16 +31,18 @@ class Node {
     };
 
     virtual Type getType() const;
+
+    virtual ~Node() = default;
 };
 
 class BlockNode : public Node {
   public:
-    explicit BlockNode(const std::vector<Node*>& content);
+    explicit BlockNode(std::vector<std::unique_ptr<Node>> content);
     Type getType() const override;
-    std::vector<Node*> getContent() const;
+    const std::vector<std::unique_ptr<Node>>& getContent() const;
 
   private:
-    std::vector<Node*> content;
+    std::vector<std::unique_ptr<Node>> content;
 };
 
 class VariableDeclarationNode : public Node {
@@ -97,14 +100,14 @@ class UnaryOperatorNode : public ExpressionNode {
         NOT
     };
 
-    UnaryOperatorNode(UnaryOperator op, ExpressionNode* operand);
+    UnaryOperatorNode(UnaryOperator op, std::unique_ptr<ExpressionNode> operand);
     Type getType() const override;
     UnaryOperator getOperator() const;
-    ExpressionNode* getOperand() const;
+    const std::unique_ptr<ExpressionNode>& getOperand() const;
 
   private:
     UnaryOperator op;
-    ExpressionNode* operand;
+    std::unique_ptr<ExpressionNode> operand;
 };
 
 class BinaryOperatorNode : public ExpressionNode {
@@ -133,16 +136,16 @@ class BinaryOperatorNode : public ExpressionNode {
         GREATER_EQUAL
     };
 
-    BinaryOperatorNode(BinaryOperator op, ExpressionNode* leftOperand, ExpressionNode* rightOperand);
+    BinaryOperatorNode(BinaryOperator op, std::unique_ptr<ExpressionNode> leftOperand, std::unique_ptr<ExpressionNode> rightOperand);
     Type getType() const override;
     BinaryOperator getOperator() const;
-    ExpressionNode* getLeftOperand() const;
-    ExpressionNode* getRightOperand() const;
+    const std::unique_ptr<ExpressionNode>& getLeftOperand() const;
+    const std::unique_ptr<ExpressionNode>& getRightOperand() const;
 
   private:
     BinaryOperator op;
-    ExpressionNode* leftOperand;
-    ExpressionNode* rightOperand;
+    std::unique_ptr<ExpressionNode> leftOperand;
+    std::unique_ptr<ExpressionNode> rightOperand;
 };
 
 class VariableNode : public ExpressionNode {
@@ -157,58 +160,58 @@ class VariableNode : public ExpressionNode {
 
 class StandaloneExpressionNode : public Node {
   public:
-    explicit StandaloneExpressionNode(ExpressionNode* expression);
+    explicit StandaloneExpressionNode(std::unique_ptr<ExpressionNode> expression);
     Type getType() const override;
-    ExpressionNode* getExpression() const;
+    const std::unique_ptr<ExpressionNode>& getExpression() const;
 
   private:
-    ExpressionNode* expression;
+    std::unique_ptr<ExpressionNode> expression;
 };
 
 class ReturnInstructionNode : public Node {
   public:
-    explicit ReturnInstructionNode(ExpressionNode* expression);
+    explicit ReturnInstructionNode(std::unique_ptr<ExpressionNode> expression);
     Type getType() const override;
-    ExpressionNode* getExpression() const;
+    const std::unique_ptr<ExpressionNode>& getExpression() const;
 
   private:
-    ExpressionNode* expression;
+    std::unique_ptr<ExpressionNode> expression;
 };
 
 class PrintInstructionNode : public Node {
   public:
-    explicit PrintInstructionNode(ExpressionNode* expression);
+    explicit PrintInstructionNode(std::unique_ptr<ExpressionNode> expression);
     Type getType() const override;
-    ExpressionNode* getExpression() const;
+    const std::unique_ptr<ExpressionNode>& getExpression() const;
 
   private:
-    ExpressionNode* expression;
+    std::unique_ptr<ExpressionNode> expression;
 };
 
 class IfNode : public Node {
   public:
-    IfNode(ExpressionNode* condition, BlockNode* thenBlock, BlockNode* elseBlock = nullptr);
+    IfNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> thenBlock, std::unique_ptr<BlockNode> elseBlock = nullptr);
     Type getType() const override;
-    ExpressionNode* getCondition() const;
-    BlockNode* getThenBlock() const;
-    BlockNode* getElseBlock() const;
+    const std::unique_ptr<ExpressionNode>& getCondition() const;
+    const std::unique_ptr<BlockNode>& getThenBlock() const;
+    const std::unique_ptr<BlockNode>& getElseBlock() const;
 
   private:
-    ExpressionNode* condition;
-    BlockNode* thenBlock;
-    BlockNode* elseBlock;
+    std::unique_ptr<ExpressionNode> condition;
+    std::unique_ptr<BlockNode> thenBlock;
+    std::unique_ptr<BlockNode> elseBlock;
 };
 
 class WhileNode : public Node {
   public:
-    WhileNode(ExpressionNode* condition, BlockNode* block);
+    WhileNode(std::unique_ptr<ExpressionNode> condition, std::unique_ptr<BlockNode> block);
     Type getType() const override;
-    ExpressionNode* getCondition() const;
-    BlockNode* getBlock() const;
+    const std::unique_ptr<ExpressionNode>& getCondition() const;
+    const std::unique_ptr<BlockNode>& getBlock() const;
 
   private:
-    ExpressionNode* condition;
-    BlockNode* block;
+    std::unique_ptr<ExpressionNode> condition;
+    std::unique_ptr<BlockNode> block;
 };
 
-#endif //BEAUTY_LANG_NODE_H
+#endif //PROG_LANG_NODE_H

@@ -2,7 +2,7 @@
 
 #include "semantic_error.h"
 
-VariableData::VariableData(PrimitiveType type) : type(type) {}
+VariableData::VariableData(PrimitiveType type) : type(type), booleanValue(), numberValue(), stringValue() {}
 
 ObjectData::Type VariableData::getType() const { return VARIABLE; }
 
@@ -20,19 +20,19 @@ void VariableData::setValue(double value) { numberValue = value; }
 
 void VariableData::setValue(const std::string& value) { stringValue = value; }
 
-void StackLevel::registerName(const std::string& name, ObjectData* objectData) {
-    names[name] = objectData;
+void StackLevel::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
+    names[name] = std::move(objectData);
 }
 
 ObjectData* StackLevel::lookupName(const std::string& name) {
     if (names.count(name) == 1) {
-        return names[name];
+        return names[name].get();
     }
     return nullptr;
 }
 
-void Store::registerName(const std::string& name, ObjectData* objectData) {
-    stk.back().registerName(name, objectData);
+void Store::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
+    stk.back().registerName(name, std::move(objectData));
 }
 
 Rvalue Store::getValue(const std::string& name) {
@@ -47,7 +47,7 @@ Rvalue Store::getValue(const std::string& name) {
     }
 }
 
-void Store::setValue(const std::string& name, Value* value) {
+void Store::setValue(const std::string& name, std::unique_ptr<Value> value) {
     auto var = getVariableData(name);
     if (var->getVariableType() != value->getType()) {
         throw SemanticError("incompatible type for assignment to " + name);

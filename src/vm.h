@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_VM_H
-#define BEAUTY_LANG_VM_H
+#ifndef PROG_LANG_VM_H
+#define PROG_LANG_VM_H
 
 #include "node.h"
 #include "value.h"
@@ -9,7 +9,7 @@ class VirtualMachine {
     static void run(Node* node);
 
   private:
-    static Value* evalExp(ExpressionNode* node);
+    static std::unique_ptr<Value> evalExp(ExpressionNode* node);
 };
 
-#endif //BEAUTY_LANG_VM_H
+#endif //PROG_LANG_VM_H

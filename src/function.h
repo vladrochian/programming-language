@@ -1,5 +1,5 @@
-#ifndef BEAUTY_LANG_FUNCTION_H
-#define BEAUTY_LANG_FUNCTION_H
+#ifndef PROG_LANG_FUNCTION_H
+#define PROG_LANG_FUNCTION_H
 
 #include <string>
 #include <vector>
@@ -12,4 +12,4 @@ class Function {
     // TODO: function implementation
 };
 
-#endif //BEAUTY_LANG_FUNCTION_H
+#endif //PROG_LANG_FUNCTION_H

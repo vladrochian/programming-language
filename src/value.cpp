@@ -37,7 +37,7 @@ double Rvalue::getNumberValue() const { return numberValue; }
 
 std::string Rvalue::getStringValue() const { return stringValue; }
 
-Lvalue::Lvalue(const std::string& name) : name(name) {}
+Lvalue::Lvalue(std::string name) : name(std::move(name)) {}
 
 Value::MemoryClass Lvalue::getMemoryClass() const { return LVALUE; }
 
@@ -49,6 +49,6 @@ double Lvalue::getNumberValue() const { return getValue().getNumberValue(); }
 
 std::string Lvalue::getStringValue() const { return getValue().getStringValue(); }
 
-void Lvalue::setValue(Value* other) { store.setValue(name, other); }
+void Lvalue::setValue(std::unique_ptr<Value> other) { store.setValue(name, std::move(other)); }
 
 Rvalue Lvalue::getValue() const { return store.getValue(name); }
