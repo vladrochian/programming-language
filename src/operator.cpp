@@ -3,7 +3,7 @@
 #include <memory>
 
 namespace {
-typedef std::map<std::string, OperatorToken> Map;
+typedef std::map<std::string, OperatorTokenType> Map;
 std::unique_ptr<Map> operatorTokenMapping;
 }
 

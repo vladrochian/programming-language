@@ -10,11 +10,11 @@
 
 class Logger {
  public:
-  static void print(const Token& token);
+  static void print(const std::shared_ptr<Token>& token);
   static void print(Node* node, int indent = 0);
 
  private:
-  static std::string toString(OperatorToken op);
+  static std::string toString(OperatorTokenType op);
   static std::string toString(Keyword keyword);
   static void printExpression(ExpressionNode* node);
   static void printIndent(int size);

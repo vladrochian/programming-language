@@ -6,32 +6,32 @@
 #include "operator.h"
 #include "syntax_error.h"
 
-std::vector<Token> Lexer::readfile(const std::string& fileName) {
+TokenList Lexer::readfile(const std::string& fileName) {
   std::ifstream input(fileName);
   std::string buffer;
-  std::vector<Token> tokenList;
+  TokenList tokenList;
   int currentLine = 1;
   // TODO: check what happens with empty lines
   while (std::getline(input, buffer)) {
     if (!buffer.empty() && buffer.back() == '\r') {
       buffer.pop_back();
     }
-    std::vector<Token> line = readLine(currentLine, buffer);
+    TokenList line = readLine(currentLine, buffer);
     tokenList.insert(tokenList.end(), line.begin(), line.end());
     ++currentLine;
   }
-  tokenList.emplace_back(currentLine, 1, Token::END_OF_FILE);
+  tokenList.push_back(std::make_shared<EndOfFileToken>(currentLine, 1));
   return tokenList;
 }
 
-std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
+TokenList Lexer::readLine(int lineIndex, const std::string& buffer) {
   std::string::const_iterator it = buffer.begin();
   int indentSize = skipWhitespace(buffer, it);
   if (it == buffer.end()) {
-    return std::vector<Token>();
+    return TokenList();
   }
-  std::vector<Token> tokenList;
-  tokenList.emplace_back(lineIndex, 1, Token::INDENT, indentSize);
+  TokenList tokenList;
+  tokenList.push_back(std::make_shared<IndentToken>(lineIndex, 1, indentSize));
   while (it != buffer.end()) {
     int col = static_cast<int>(it - buffer.begin() + 1);
     std::string s;
@@ -42,17 +42,17 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
         throw SyntaxError(lineIndex, static_cast<int>(it - buffer.begin() + 1),
             "unexpected symbol in numeric value");
       }
-      tokenList.emplace_back(lineIndex, col, Token::NUMBER, n);
+      tokenList.push_back(std::make_shared<NumberToken>(lineIndex, col, n));
     } else if (std::isalpha(*it) || *it == '_') {
       s = getWord(buffer, it);
       if (s == "false") {
-        tokenList.emplace_back(lineIndex, col, Token::BOOLEAN, false);
+        tokenList.push_back(std::make_shared<BooleanToken>(lineIndex, col, false));
       } else if (s == "true") {
-        tokenList.emplace_back(lineIndex, col, Token::BOOLEAN, true);
+        tokenList.push_back(std::make_shared<BooleanToken>(lineIndex, col, true));
       } else if (keywordMap().count(s) == 1) {
-        tokenList.emplace_back(lineIndex, col, Token::KEYWORD, keywordMap().at(s));
+        tokenList.push_back(std::make_shared<KeywordToken>(lineIndex, col, keywordMap().at(s)));
       } else {
-        tokenList.emplace_back(lineIndex, col, Token::IDENTIFIER, s);
+        tokenList.push_back(std::make_shared<IdentifierToken>(lineIndex, col, s));
       }
     } else if (*it == '\'' || *it == '\"') {
       s = getString(buffer, it);
@@ -60,18 +60,18 @@ std::vector<Token> Lexer::readLine(int lineIndex, const std::string& buffer) {
         throw SyntaxError(lineIndex, static_cast<int>(it - buffer.begin() + 1), "expected ending quote");
       }
       ++it;
-      tokenList.emplace_back(lineIndex, col, Token::STRING, s);
+      tokenList.push_back(std::make_shared<StringToken>(lineIndex, col, s));
     } else {
       s = getOperator(buffer, it);
       if (s.empty()) {
         throw SyntaxError(lineIndex, col, "unknown symbol");
       } else {
-        tokenList.emplace_back(lineIndex, col, Token::OPERATOR, operatorTokenMap().at(s));
+        tokenList.push_back(std::make_shared<OperatorToken>(lineIndex, col, operatorTokenMap().at(s)));
       }
     }
     skipWhitespace(buffer, it);
   }
-  tokenList.emplace_back(lineIndex, buffer.size() + 1, Token::LINE_FEED);
+  tokenList.push_back(std::make_shared<LineFeedToken>(lineIndex, buffer.size() + 1));
   return tokenList;
 }
 

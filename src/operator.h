@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-enum OperatorToken {
+enum OperatorTokenType {
   OP_DOT,
   OP_COMMA,
   OP_PLUS,
@@ -39,6 +39,6 @@ enum OperatorToken {
 };
 
 void initializeOperatorTokenMapping();
-const std::map<std::string, OperatorToken>& operatorTokenMap();
+const std::map<std::string, OperatorTokenType>& operatorTokenMap();
 
 #endif //PROG_LANG_OPERATOR_H

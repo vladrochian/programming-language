@@ -2,29 +2,29 @@
 
 #include <cstdio>
 
-void Logger::print(const Token& token) {
+void Logger::print(const std::shared_ptr<Token>& token) {
   std::printf("[");
-  switch (token.getType()) {
+  switch (token->getType()) {
     case Token::BOOLEAN:
-      std::printf("%s", token.getBoolValue() ? "true" : "false");
+      std::printf("%s", std::dynamic_pointer_cast<BooleanToken>(token)->getValue() ? "true" : "false");
       break;
     case Token::NUMBER:
-      std::printf("%f", token.getDoubleValue());
+      std::printf("%f", std::dynamic_pointer_cast<NumberToken>(token)->getValue());
       break;
     case Token::STRING:
-      std::printf("\"%s\"", token.getStringValue().c_str());
+      std::printf("\"%s\"", std::dynamic_pointer_cast<StringToken>(token)->getValue().c_str());
       break;
     case Token::OPERATOR:
-      std::printf("%s", toString(token.getOperator()).c_str());
+      std::printf("%s", toString(std::dynamic_pointer_cast<OperatorToken>(token)->getOperator()).c_str());
       break;
     case Token::KEYWORD:
-      std::printf("KW:%s", toString(token.getKeyword()).c_str());
+      std::printf("KW:%s", toString(std::dynamic_pointer_cast<KeywordToken>(token)->getKeyword()).c_str());
       break;
     case Token::IDENTIFIER:
-      std::printf("ID:%s", token.getStringValue().c_str());
+      std::printf("ID:%s", std::dynamic_pointer_cast<IdentifierToken>(token)->getName().c_str());
       break;
     case Token::INDENT:
-      std::printf("INDENT:%d", token.getIntValue());
+      std::printf("INDENT:%d", std::dynamic_pointer_cast<IndentToken>(token)->getSize());
       break;
     case Token::LINE_FEED:
       std::printf("LF");
@@ -33,9 +33,9 @@ void Logger::print(const Token& token) {
       std::printf("EOF");
       break;
   }
-  auto location = token.getLocation();
+  auto location = token->getLocation();
   std::printf("|%d,%d] ", location.first, location.second);
-  if (token.getType() == Token::LINE_FEED || token.getType() == Token::END_OF_FILE) {
+  if (token->getType() == Token::LINE_FEED || token->getType() == Token::END_OF_FILE) {
     printf("\n");
   }
 }
@@ -94,7 +94,7 @@ void Logger::print(Node* node, int indent) {
   }
 }
 
-std::string Logger::toString(OperatorToken op) {
+std::string Logger::toString(OperatorTokenType op) {
   for (const auto& it : operatorTokenMap()) {
     if (it.second == op) {
       return it.first;

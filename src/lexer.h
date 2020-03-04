@@ -8,10 +8,10 @@
 
 class Lexer {
  public:
-  static std::vector<Token> readfile(const std::string& fileName);
+  static TokenList readfile(const std::string& fileName);
 
  private:
-  static std::vector<Token> readLine(int lineIndex, const std::string& buffer);
+  static TokenList readLine(int lineIndex, const std::string& buffer);
   static int skipWhitespace(const std::string& buffer, std::string::const_iterator& it);
   static std::string getWord(const std::string& buffer, std::string::const_iterator& it);
   static double getNumber(const std::string& buffer, std::string::const_iterator& it);

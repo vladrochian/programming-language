@@ -6,21 +6,21 @@
 #include "syntax_error.h"
 
 namespace {
-typedef std::vector<OperatorToken> TokenVector;
+typedef std::vector<OperatorTokenType> TokenVector;
 std::unique_ptr<TokenVector> assignmentOpTokens;
 std::unique_ptr<TokenVector> predicateTokens;
 std::unique_ptr<TokenVector> additionOpTokens;
 std::unique_ptr<TokenVector> multiplicationOpTokens;
 std::unique_ptr<TokenVector> unaryOpTokens;
 
-void initializeTokenVector(std::unique_ptr<TokenVector>& v, std::initializer_list<OperatorToken> init) {
+void initializeTokenVector(std::unique_ptr<TokenVector>& v, std::initializer_list<OperatorTokenType> init) {
   v = std::make_unique<TokenVector>(init);
 }
 
-typedef std::map<OperatorToken, UnaryOperatorNode::UnaryOperator> UnaryOpMap;
+typedef std::map<OperatorTokenType, UnaryOperatorNode::UnaryOperator> UnaryOpMap;
 std::unique_ptr<UnaryOpMap> unaryOpNodeMap;
 
-typedef std::map<OperatorToken, BinaryOperatorNode::BinaryOperator> BinaryOpMap;
+typedef std::map<OperatorTokenType, BinaryOperatorNode::BinaryOperator> BinaryOpMap;
 std::unique_ptr<BinaryOpMap> binaryOpNodeMap;
 }
 
@@ -99,8 +99,8 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parse(TokenIter& iter) {
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseAssignmentLevel(TokenIter& iter) {
   auto node = parseOrLevel(iter);
-  if (iter->getType() == Token::OPERATOR && isOnLevel(*assignmentOpTokens, *iter)) {
-    auto op = binaryOpNodeMap->at(iter->getOperator());
+  if (isOperator(*iter) && isOnLevel(*assignmentOpTokens, *iter)) {
+    auto op = binaryOpNodeMap->at(std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator());
     node = std::make_unique<BinaryOperatorNode>(op, std::move(node), parseAssignmentLevel(++iter));
   }
   return node;
@@ -108,7 +108,7 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseAssignmentLevel(TokenIter
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseOrLevel(TokenIter& iter) {
   auto node = parseAndLevel(iter);
-  while (iter->getType() == Token::OPERATOR && iter->getOperator() == OP_OR) {
+  while (isOperator(*iter) && getOperator(*iter) == OP_OR) {
     node = std::make_unique<BinaryOperatorNode>(BinaryOperatorNode::OR, std::move(node), parseAndLevel(++iter));
   }
   return node;
@@ -116,7 +116,7 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseOrLevel(TokenIter& iter) 
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseAndLevel(TokenIter& iter) {
   auto node = parsePredicateLevel(iter);
-  while (iter->getType() == Token::OPERATOR && iter->getOperator() == OP_AND) {
+  while (isOperator(*iter) && getOperator(*iter) == OP_AND) {
     node = std::make_unique<BinaryOperatorNode>(BinaryOperatorNode::AND, std::move(node), parsePredicateLevel(++iter));
   }
   return node;
@@ -124,8 +124,8 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseAndLevel(TokenIter& iter)
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parsePredicateLevel(TokenIter& iter) {
   auto node = parseAdditionLevel(iter);
-  while (iter->getType() == Token::OPERATOR && isOnLevel(*predicateTokens, *iter)) {
-    auto op = binaryOpNodeMap->at(iter->getOperator());
+  while (isOperator(*iter) && isOnLevel(*predicateTokens, *iter)) {
+    auto op = binaryOpNodeMap->at(getOperator(*iter));
     node = std::make_unique<BinaryOperatorNode>(op, std::move(node), parseAdditionLevel(++iter));
   }
   return node;
@@ -133,8 +133,8 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parsePredicateLevel(TokenIter&
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseAdditionLevel(TokenIter& iter) {
   auto node = parseMultiplicationLevel(iter);
-  while (iter->getType() == Token::OPERATOR && isOnLevel(*additionOpTokens, *iter)) {
-    auto op = binaryOpNodeMap->at(iter->getOperator());
+  while (isOperator(*iter) && isOnLevel(*additionOpTokens, *iter)) {
+    auto op = binaryOpNodeMap->at(getOperator(*iter));
     node = std::make_unique<BinaryOperatorNode>(op, std::move(node), parseMultiplicationLevel(++iter));
   }
   return node;
@@ -142,41 +142,41 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseAdditionLevel(TokenIter& 
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseMultiplicationLevel(TokenIter& iter) {
   auto node = parseUnaryOperatorsLevel(iter);
-  while (iter->getType() == Token::OPERATOR && isOnLevel(*multiplicationOpTokens, *iter)) {
-    auto op = binaryOpNodeMap->at(iter->getOperator());
+  while (isOperator(*iter) && isOnLevel(*multiplicationOpTokens, *iter)) {
+    auto op = binaryOpNodeMap->at(getOperator(*iter));
     node = std::make_unique<BinaryOperatorNode>(op, std::move(node), parseUnaryOperatorsLevel(++iter));
   }
   return node;
 }
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseUnaryOperatorsLevel(TokenIter& iter) {
-  if (iter->getType() == Token::OPERATOR && isOnLevel(*unaryOpTokens, *iter)) {
-    auto op = unaryOpNodeMap->at(iter->getOperator());
+  if (isOperator(*iter) && isOnLevel(*unaryOpTokens, *iter)) {
+    auto op = unaryOpNodeMap->at(getOperator(*iter));
     return std::make_unique<UnaryOperatorNode>(op, parseUnaryOperatorsLevel(++iter));
   }
   return parseOperand(iter);
 }
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) {
-  auto location = iter->getLocation();
+  auto location = (*iter)->getLocation();
   std::unique_ptr<ExpressionNode> node;
-  switch (iter->getType()) {
+  switch ((*iter)->getType()) {
     case Token::BOOLEAN:
-      return std::make_unique<BooleanValueNode>((iter++)->getBoolValue());
+      return std::make_unique<BooleanValueNode>(std::dynamic_pointer_cast<BooleanToken>(*(iter++))->getValue());
     case Token::NUMBER:
-      return std::make_unique<NumberValueNode>((iter++)->getDoubleValue());
+      return std::make_unique<NumberValueNode>(std::dynamic_pointer_cast<NumberToken>(*(iter++))->getValue());
     case Token::STRING:
-      return std::make_unique<StringValueNode>((iter++)->getStringValue());
+      return std::make_unique<StringValueNode>(std::dynamic_pointer_cast<StringToken>(*(iter++))->getValue());
     case Token::IDENTIFIER:
       // TODO: function call
-      return std::make_unique<VariableNode>((iter++)->getStringValue());
+      return std::make_unique<VariableNode>(std::dynamic_pointer_cast<IdentifierToken>(*(iter++))->getName());
     case Token::OPERATOR:
-      if (iter->getOperator() != OP_OPENING_ROUND) {
+      if (getOperator(*iter) != OP_OPENING_ROUND) {
         throw SyntaxError(location.first, location.second,
             "expected open parenthesis, unary operator or operand");
       }
       node = parseAssignmentLevel(++iter);
-      if (iter->getType() != Token::OPERATOR || iter->getOperator() != OP_CLOSING_ROUND) {
+      if (!isOperator(*iter) || getOperator(*iter) != OP_CLOSING_ROUND) {
         throw SyntaxError(location.first, location.second, "expected binary operator or closing parenthesis");
       }
       ++iter;
@@ -186,6 +186,14 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) 
   }
 }
 
-bool ExpressionParser::isOnLevel(const std::vector<OperatorToken>& opList, const Token& token) {
-  return std::count(opList.begin(), opList.end(), token.getOperator()) == 1;
+bool ExpressionParser::isOperator(const std::shared_ptr<Token>& token) {
+  return token->getType() == Token::OPERATOR;
+}
+
+bool ExpressionParser::isOnLevel(const std::vector<OperatorTokenType>& opList, const std::shared_ptr<Token>& token) {
+  return std::count(opList.begin(), opList.end(), getOperator(token)) == 1;
+}
+
+OperatorTokenType ExpressionParser::getOperator(const std::shared_ptr<Token>& token) {
+  return std::dynamic_pointer_cast<OperatorToken>(token)->getOperator();
 }
