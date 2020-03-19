@@ -47,14 +47,14 @@ class BlockNode : public Node {
 
 class VariableDeclarationNode : public Node {
  public:
-  VariableDeclarationNode(std::string name, PrimitiveType type);
+  VariableDeclarationNode(std::string name, int type);
   Type getType() const override;
   std::string getVariableName() const;
-  PrimitiveType getVariableType() const;
+  int getVariableType() const;
 
  private:
   std::string name;
-  PrimitiveType type;
+  int type;
 };
 
 class ExpressionNode : public Node {

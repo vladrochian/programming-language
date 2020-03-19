@@ -22,7 +22,7 @@ class ObjectData {
 
 class VariableData : public ObjectData {
  public:
-  explicit VariableData(PrimitiveType type) : value() {
+  explicit VariableData(int type) : value() {
     switch (type) {
       case TYPE_BOOLEAN:
         value = std::make_unique<BooleanRvalue>(false);

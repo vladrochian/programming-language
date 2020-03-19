@@ -17,7 +17,7 @@ class Value {
   };
   virtual ~Value() = default;
   virtual MemoryClass getMemoryClass() const = 0;
-  virtual PrimitiveType getType() const = 0;
+  virtual int getType() const = 0;
   virtual const Rvalue* getRvalue() const = 0;
 };
 
@@ -31,7 +31,7 @@ class Lvalue : public Value {
  public:
   explicit Lvalue(std::string name) : name(std::move(name)) {}
   MemoryClass getMemoryClass() const override { return LVALUE; }
-  PrimitiveType getType() const override;
+  int getType() const override;
   const Rvalue* getRvalue() const override;
   void setValue(std::unique_ptr<Rvalue> value) const;
 
@@ -42,7 +42,7 @@ class Lvalue : public Value {
 class BooleanRvalue : public Rvalue {
  public:
   explicit BooleanRvalue(bool value) : value(value) {}
-  PrimitiveType getType() const override { return TYPE_BOOLEAN; }
+  int getType() const override { return TYPE_BOOLEAN; }
   bool getValue() const { return value; }
 
  private:
@@ -52,7 +52,7 @@ class BooleanRvalue : public Rvalue {
 class NumberRvalue : public Rvalue {
  public:
   explicit NumberRvalue(double value) : value(value) {}
-  PrimitiveType getType() const override { return TYPE_NUMBER; }
+  int getType() const override { return TYPE_NUMBER; }
   double getValue() const { return value; }
 
  private:
@@ -62,7 +62,7 @@ class NumberRvalue : public Rvalue {
 class StringRvalue : public Rvalue {
  public:
   explicit StringRvalue(std::string value) : value(std::move(value)) {}
-  PrimitiveType getType() const override { return TYPE_STRING; }
+  int getType() const override { return TYPE_STRING; }
   std::string getValue() const { return value; }
 
  private:

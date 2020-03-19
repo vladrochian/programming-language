@@ -134,7 +134,7 @@ std::unique_ptr<StandaloneExpressionNode> Parser::parseExpression(TokenIter& ite
 std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const TokenList& tokenList) {
   // TODO: initialization
   std::string id = std::dynamic_pointer_cast<IdentifierToken>(tokenList[1])->getName();
-  PrimitiveType type;
+  int type;
   if (tokenList[3]->getType() == Token::KEYWORD) {
     switch (std::dynamic_pointer_cast<KeywordToken>(tokenList[3])->getKeyword()) {
       case KEYWORD_BOOLEAN:

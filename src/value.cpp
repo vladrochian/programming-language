@@ -2,7 +2,7 @@
 
 #include "store.h"
 
-PrimitiveType Lvalue::getType() const { return getRvalue()->getType(); }
+int Lvalue::getType() const { return getRvalue()->getType(); }
 
 const Rvalue* Lvalue::getRvalue() const { return store.getValue(name).get(); }
 

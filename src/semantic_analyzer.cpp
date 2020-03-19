@@ -51,7 +51,7 @@ void SemanticAnalyzer::analyzeExpr(ExpressionNode* node) {
   getExpressionMemoryClass(node);
 }
 
-PrimitiveType SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
+int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
   auto unOpNode = dynamic_cast<UnaryOperatorNode*>(node);
   auto binOpNode = dynamic_cast<BinaryOperatorNode*>(node);
   switch (node->getType()) {
@@ -93,7 +93,7 @@ Value::MemoryClass SemanticAnalyzer::getExpressionMemoryClass(ExpressionNode* no
   }
 }
 
-PrimitiveType SemanticAnalyzer::getResultType(UnaryOperatorNode::UnaryOperator op, PrimitiveType type) {
+int SemanticAnalyzer::getResultType(UnaryOperatorNode::UnaryOperator op, int type) {
   if ((op == UnaryOperatorNode::NOT && type == TYPE_BOOLEAN) ||
       (op == UnaryOperatorNode::PLUS && type == TYPE_NUMBER) ||
       (op == UnaryOperatorNode::MINUS && type == TYPE_NUMBER)) {
@@ -102,8 +102,8 @@ PrimitiveType SemanticAnalyzer::getResultType(UnaryOperatorNode::UnaryOperator o
   throw SemanticError("invalid operand");
 }
 
-PrimitiveType SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, PrimitiveType lhs,
-                                              PrimitiveType rhs) {
+int SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, int lhs,
+                                              int rhs) {
   switch (op) {
     case BinaryOperatorNode::ADD:
       if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
