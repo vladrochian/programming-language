@@ -21,6 +21,7 @@ class ExpressionParser {
   static std::unique_ptr<ExpressionNode> parseAdditionLevel(TokenIter& iter);
   static std::unique_ptr<ExpressionNode> parseMultiplicationLevel(TokenIter& iter);
   static std::unique_ptr<ExpressionNode> parseUnaryOperatorsLevel(TokenIter& iter);
+  static std::unique_ptr<ExpressionNode> parseIndexOperatorLevel(TokenIter& iter);
   static std::unique_ptr<ExpressionNode> parseOperand(TokenIter& iter);
   static bool isOperator(const std::shared_ptr<Token>& token);
   static bool isOnLevel(const std::vector<OperatorTokenType>& opList, const std::shared_ptr<Token>& token);

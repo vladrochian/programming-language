@@ -225,6 +225,25 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
         return std::make_unique<BooleanRvalue>(getNumberValue(ls) >= getNumberValue(rs));
       }
       return std::make_unique<BooleanRvalue>(getStringValue(ls) >= getStringValue(rs));
+    case BinaryOperatorNode::INDEX:
+      auto i = getNumberValue(rs);
+      int ii = i;
+      if (ii != i) {
+        throw RuntimeError("non-integer number used as index");
+      }
+      if (ls->getType() == TYPE_STRING) {
+        auto s = getStringValue(ls);
+        if (ii < 0) {
+          ii += static_cast<int>(s.size());
+        }
+        if (ii < 0 || ii >= static_cast<int>(s.size())) {
+          throw RuntimeError("string index out of bounds");
+        }
+        std::string ans;
+        ans += s[ii];
+        return std::make_unique<StringRvalue>(ans);
+      }
+      // TODO: array
   }
 }
 

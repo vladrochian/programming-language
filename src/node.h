@@ -121,7 +121,8 @@ class BinaryOperatorNode : public ExpressionNode {
     LESS,
     GREATER,
     LESS_EQUAL,
-    GREATER_EQUAL
+    GREATER_EQUAL,
+    INDEX
   };
 
   BinaryOperatorNode(BinaryOperator op, std::unique_ptr<ExpressionNode> leftOperand,

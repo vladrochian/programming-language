@@ -154,7 +154,21 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseUnaryOperatorsLevel(Token
     auto op = unaryOpNodeMap->at(getOperator(*iter));
     return std::make_unique<UnaryOperatorNode>(op, parseUnaryOperatorsLevel(++iter));
   }
-  return parseOperand(iter);
+  return parseIndexOperatorLevel(iter);
+}
+
+std::unique_ptr<ExpressionNode> ExpressionParser::parseIndexOperatorLevel(TokenIter& iter) {
+  auto node = parseOperand(iter);
+  while (isOperator(*iter) && getOperator(*iter) == OP_OPENING_SQUARE) {
+    ++iter;
+    node = std::make_unique<BinaryOperatorNode>(BinaryOperatorNode::INDEX, std::move(node), parseAssignmentLevel(iter));
+    if (!isOperator(*iter) || getOperator(*iter) != OP_CLOSING_SQUARE) {
+      auto location = (*iter)->getLocation();
+      throw SyntaxError(location.first, location.second, "expected closing square bracket");
+    }
+    ++iter;
+  }
+  return node;
 }
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) {

@@ -109,7 +109,7 @@ int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
     case Node::VARIABLE:
       return Lvalue(dynamic_cast<VariableNode*>(node)->getName()).getType();
     default:
-      break;
+      return TYPE_NONE;
   }
 }
 
@@ -193,6 +193,14 @@ int SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, int l
       if ((lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) ||
           (lhs == TYPE_STRING && rhs == TYPE_STRING)) {
         return TYPE_BOOLEAN;
+      }
+      break;
+    case BinaryOperatorNode::INDEX:
+      if (lhs == TYPE_STRING && rhs == TYPE_NUMBER) {
+        return TYPE_STRING;
+      }
+      if (isTypeArray(lhs) && rhs == TYPE_NUMBER) {
+        return getArrayElementType(lhs);
       }
       break;
   }
