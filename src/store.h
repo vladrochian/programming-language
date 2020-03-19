@@ -22,16 +22,18 @@ class ObjectData {
 
 class VariableData : public ObjectData {
  public:
-  explicit VariableData(int type) : value() {
-    switch (type) {
-      case TYPE_BOOLEAN:
-        value = std::make_unique<BooleanRvalue>(false);
-        break;
-      case TYPE_NUMBER:
-        value = std::make_unique<NumberRvalue>(0.0);
-        break;
-      case TYPE_STRING:
-        value = std::make_unique<StringRvalue>(std::string());
+  VariableData(int type, std::unique_ptr<Value> value) : value() {
+    auto v = value ? value.get() : nullptr;
+    if (type == TYPE_BOOLEAN) {
+      this->value = std::make_unique<BooleanRvalue>(value ? dynamic_cast<BooleanRvalue*>(v)->getValue() : false);
+    } else if (type == TYPE_NUMBER) {
+      this->value = std::make_unique<NumberRvalue>(value ? dynamic_cast<NumberRvalue*>(v)->getValue() : 0.0);
+    } else if (type == TYPE_STRING) {
+      this->value = std::make_unique<StringRvalue>(value ? dynamic_cast<StringRvalue*>(v)->getValue() : std::string());
+    } else if (isTypeArray(type)) {
+      // TODO
+    } else if (isTypeObj(type)) {
+
     }
   }
 

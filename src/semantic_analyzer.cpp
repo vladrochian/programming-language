@@ -25,7 +25,37 @@ void SemanticAnalyzer::analyze(Node* node) {
     }
   } else if (node->getType() == Node::VARIABLE_DECLARATION) {
     auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
-    store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));
+    int type = varDecNode->getVariableType();
+    if (varDecNode->getInitializer()) {
+      int exprType = getExpressionType(varDecNode->getInitializer().get());
+      if (exprType == TYPE_NONE) {
+        throw SemanticError("void expression passed as initializer");
+      }
+      if (type == TYPE_NONE) {
+        if (isTypeList(exprType)) {
+          if (getListElementType(exprType) == TYPE_NONE) {
+            throw SemanticError("multiple type list passed as initializer for array");
+          }
+          type = TYPE_ARRAY(getListElementType(exprType));
+        } else {
+          type = exprType;
+        }
+      } else if (isTypeArray(type) && isTypeList(exprType)) {
+        if (getListElementType(exprType) == TYPE_NONE) {
+          throw SemanticError("multiple type list passed as initializer for array");
+        }
+        if (getArrayElementType(type) != getListElementType(exprType)) {
+          throw SemanticError("array and initializer list types do not match");
+        }
+      } else if (isTypeObj(type) && isTypeList(exprType)) {
+        // TODO: object init
+      } else if (type != exprType) {
+        throw SemanticError("initializer does not match variable type");
+      }
+    } else if (type == TYPE_NONE) {
+      throw SemanticError("variable without type requires initializer");
+    }
+    store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, nullptr));
   } else if (node->getType() == Node::IF_STATEMENT) {
     auto ifNode = dynamic_cast<IfNode*>(node);
     analyzeExpr(ifNode->getCondition().get());

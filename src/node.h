@@ -45,18 +45,6 @@ class BlockNode : public Node {
   std::vector<std::unique_ptr<Node>> content;
 };
 
-class VariableDeclarationNode : public Node {
- public:
-  VariableDeclarationNode(std::string name, int type);
-  Type getType() const override;
-  std::string getVariableName() const;
-  int getVariableType() const;
-
- private:
-  std::string name;
-  int type;
-};
-
 class ExpressionNode : public Node {
  public:
   Type getType() const override;
@@ -167,6 +155,20 @@ class StandaloneExpressionNode : public Node {
 
  private:
   std::unique_ptr<ExpressionNode> expression;
+};
+
+class VariableDeclarationNode : public Node {
+ public:
+  VariableDeclarationNode(std::string name, int type, std::unique_ptr<ExpressionNode> initializer);
+  Type getType() const override;
+  std::string getVariableName() const;
+  int getVariableType() const;
+  const std::unique_ptr<ExpressionNode>& getInitializer() const;
+
+ private:
+  std::string name;
+  int type;
+  std::unique_ptr<ExpressionNode> initializer;
 };
 
 class ReturnInstructionNode : public Node {

@@ -62,7 +62,20 @@ void VirtualMachine::run(Node* node) {
     }
   } else if (node->getType() == Node::VARIABLE_DECLARATION) {
     auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
-    store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(varDecNode->getVariableType()));
+    int type = varDecNode->getVariableType();
+    std::unique_ptr<Value> exprRet;
+    if (varDecNode->getInitializer()) {
+      exprRet = evalExp(varDecNode->getInitializer().get());
+      int exprType = exprRet->getType();
+      if (type == TYPE_NONE) {
+        if (isTypeList(exprType)) {
+          type = TYPE_ARRAY(getListElementType(exprType));
+        } else {
+          type = exprType;
+        }
+      }
+    }
+    store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, std::move(exprRet)));
   } else if (node->getType() == Node::IF_STATEMENT) {
     auto ifNode = dynamic_cast<IfNode*>(node);
     if (getBooleanValue(evalExp(ifNode->getCondition().get()))) {
