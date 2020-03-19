@@ -16,10 +16,19 @@ void SemanticAnalyzer::analyze(Node* node) {
   } else if (node->getType() == Node::RETURN_INSTRUCTION) {
     analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
   } else if (node->getType() == Node::PRINT_INSTRUCTION) {
-    analyzeExpr(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
+    auto exprToPrint = dynamic_cast<PrintInstructionNode*>(node)->getExpression().get();
+    analyzeExpr(exprToPrint);
+    int eType = getExpressionType(exprToPrint);
+    if (eType != TYPE_BOOLEAN && eType != TYPE_NUMBER && eType != TYPE_STRING) {
+      throw SemanticError("print statement only accepts primitive types");
+    }
   } else if (node->getType() == Node::READ_INSTRUCTION) {
     auto exprToRead = dynamic_cast<ReadInstructionNode*>(node)->getExpression().get();
     analyzeExpr(exprToRead);
+    int eType = getExpressionType(exprToRead);
+    if (eType != TYPE_BOOLEAN && eType != TYPE_NUMBER && eType != TYPE_STRING) {
+      throw SemanticError("read statement only accepts primitive types");
+    }
     if (getExpressionMemoryClass(exprToRead) == Value::RVALUE) {
       throw SemanticError("rvalue as argument for read statement");
     }
@@ -27,6 +36,7 @@ void SemanticAnalyzer::analyze(Node* node) {
     auto varDecNode = dynamic_cast<VariableDeclarationNode*>(node);
     int type = varDecNode->getVariableType();
     if (varDecNode->getInitializer()) {
+      analyzeExpr(varDecNode->getInitializer().get());
       int exprType = getExpressionType(varDecNode->getInitializer().get());
       if (exprType == TYPE_NONE) {
         throw SemanticError("void expression passed as initializer");
