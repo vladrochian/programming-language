@@ -91,13 +91,19 @@ void SemanticAnalyzer::analyze(Node* node) {
     auto range = forNode->getRangeExpression().get();
     analyzeExpr(range);
     int eType = getExpressionType(range);
-    if (eType != TYPE_STRING && !isTypeArray(eType)) {
+    if (eType != TYPE_STRING && !isTypeArray(eType) && !isTypeList(eType)) {
       throw SemanticError("iteration can only be performed on strings and arrays");
     }
+    if (isTypeList(eType) && getListElementType(eType) == TYPE_MIXED) {
+      throw SemanticError("iteration can not be performed on mixed type lists");
+    }
     store.newLevel();
-    int elemType = eType == TYPE_STRING ? TYPE_STRING : getArrayElementType(eType);
+    int elemType =
+        eType == TYPE_STRING ? TYPE_STRING : isTypeArray(eType) ? getArrayElementType(eType) : getListElementType(
+            eType);
     store.registerName(forNode->getIterName(), std::make_unique<VariableData>(elemType, nullptr));
     analyze(forNode->getBlock().get());
+    store.deleteLevel();
   }
 }
 

@@ -106,9 +106,12 @@ void VirtualMachine::run(Node* node) {
         store.registerName(forNode->getIterName(),
             std::make_unique<VariableData>(TYPE_STRING, std::make_unique<StringRvalue>(cs)));
         run(forNode->getBlock().get());
+        store.deleteLevel();
       }
     } else {
-      const auto& arr = *dynamic_cast<const ArrayRvalue*>(range->getRvalue())->getValue();
+      const auto& arr = isTypeArray(range->getType())
+          ? *dynamic_cast<const ArrayRvalue*>(range->getRvalue())->getValue()
+          : dynamic_cast<const ListRvalue*>(range->getRvalue())->getValue();
       for (const auto& it : arr) {
         auto rv = it->getRvalue();
         int type = rv->getType();
@@ -126,6 +129,7 @@ void VirtualMachine::run(Node* node) {
         store.registerName(forNode->getIterName(),
             std::make_unique<VariableData>(getArrayElementType(range->getType()), std::move(elem)));
         run(forNode->getBlock().get());
+        store.deleteLevel();
       }
     }
   }
