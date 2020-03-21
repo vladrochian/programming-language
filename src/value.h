@@ -33,10 +33,19 @@ class Lvalue : public Value {
   MemoryClass getMemoryClass() const override { return LVALUE; }
   int getType() const override;
   const Rvalue* getRvalue() const override;
-  void setValue(std::unique_ptr<Rvalue> value) const;
+  virtual void setValue(std::unique_ptr<Rvalue> value) const;
+
+  std::string name;
+};
+
+class ElementLvalue : public Lvalue {
+ public:
+  ElementLvalue(std::string name, std::vector<int> index) : Lvalue(std::move(name)), index(std::move(index)) {}
+  const Rvalue* getRvalue() const override;
+  void setValue(std::unique_ptr<Rvalue> value) const override;
 
  private:
-  std::string name;
+  std::vector<int> index;
 };
 
 class BooleanRvalue : public Rvalue {
@@ -67,6 +76,33 @@ class StringRvalue : public Rvalue {
 
  private:
   std::string value;
+};
+
+class ArrayRvalue : public Rvalue {
+ public:
+  explicit ArrayRvalue(int type) : value(std::make_shared<std::vector<std::shared_ptr<Rvalue>>>()), type(type) {}
+  ArrayRvalue(int type, std::vector<std::shared_ptr<Rvalue>> v)
+    : value(std::make_shared<std::vector<std::shared_ptr<Rvalue>>>(std::move(v))), type(type) {}
+  ArrayRvalue(const ArrayRvalue& other) : type(other.type), value(other.value) {}
+  int getType() const override { return type; }
+  int getElementType() const { return getArrayElementType(type); }
+  const std::shared_ptr<std::vector<std::shared_ptr<Rvalue>>>& getValue() const { return value; }
+
+ private:
+  int type;
+  std::shared_ptr<std::vector<std::shared_ptr<Rvalue>>> value;
+};
+
+class ListRvalue : public Rvalue {
+ public:
+  explicit ListRvalue(int type, std::vector<std::shared_ptr<Rvalue>> value) : value(std::move(value)), type(type) {}
+  int getType() const override { return type; }
+  int getElementType() const { return getListElementType(type); }
+  const std::vector<std::shared_ptr<Rvalue>>& getValue() const { return value; }
+
+ private:
+  int type;
+  std::vector<std::shared_ptr<Rvalue>> value;
 };
 
 #endif //PROG_LANG_PRIMITIVE_VALUE_H

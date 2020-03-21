@@ -40,9 +40,11 @@ void VirtualMachine::run(Node* node) {
     switch (value->getType()) {
       case TYPE_BOOLEAN:
         std::cin >> stringValue;
-        if (stringValue == "true" || stringValue == "TRUE" || stringValue == "1" || stringValue == "t" || stringValue == "T") {
+        if (stringValue == "true" || stringValue == "TRUE" || stringValue == "1" || stringValue == "t" ||
+            stringValue == "T") {
           booleanValue = true;
-        } else if (stringValue == "false" || stringValue == "FALSE" || stringValue == "0" || stringValue == "f" || stringValue == "F") {
+        } else if (stringValue == "false" || stringValue == "FALSE" || stringValue == "0" || stringValue == "f" ||
+                   stringValue == "F") {
           booleanValue = false;
         } else {
           throw RuntimeError("invalid input for boolean type");
@@ -74,6 +76,9 @@ void VirtualMachine::run(Node* node) {
           type = exprType;
         }
       }
+      if (isTypeList(exprType)) {
+        exprRet = std::make_unique<ArrayRvalue>(type, dynamic_cast<const ListRvalue*>(exprRet->getRvalue())->getValue());
+      }
     }
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, std::move(exprRet)));
   } else if (node->getType() == Node::IF_STATEMENT) {
@@ -100,6 +105,30 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
   }
   if (node->getType() == Node::STRING_VALUE) {
     return std::make_unique<StringRvalue>(dynamic_cast<StringValueNode*>(node)->getValue());
+  }
+  if (node->getType() == Node::LIST_VALUE) {
+    std::vector<std::shared_ptr<Rvalue>> v;
+    int lt = TYPE_NONE;
+    for (const auto& elem : dynamic_cast<ListValueNode*>(node)->getElements()) {
+      auto er = evalExp(elem.get());
+      auto expRes = er->getRvalue();
+      int type = expRes->getType();
+      if (lt == TYPE_NONE) {
+        lt = type;
+      } else if (lt != type) {
+        lt = TYPE_MIXED;
+      }
+      if (type == TYPE_BOOLEAN) {
+        v.emplace_back(std::make_shared<BooleanRvalue>(dynamic_cast<const BooleanRvalue*>(expRes)->getValue()));
+      } else if (type == TYPE_NUMBER) {
+        v.emplace_back(std::make_shared<NumberRvalue>(dynamic_cast<const NumberRvalue*>(expRes)->getValue()));
+      } else if (type == TYPE_STRING) {
+        v.emplace_back(std::make_shared<StringRvalue>(dynamic_cast<const StringRvalue*>(expRes)->getValue()));
+      } else if (isTypeArray(type)) {
+        v.emplace_back(std::make_shared<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(expRes)));
+      }
+    }
+    return std::make_unique<ListRvalue>(TYPE_LIST(lt), std::move(v));
   }
   if (node->getType() == Node::VARIABLE) {
     return std::make_unique<Lvalue>(dynamic_cast<VariableNode*>(node)->getName());
@@ -147,6 +176,17 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
         dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<NumberRvalue>(getNumberValue(rs)));
       } else if (ls->getType() == TYPE_STRING) {
         dynamic_cast<Lvalue*>(ls.get())->setValue(std::make_unique<StringRvalue>(getStringValue(rs)));
+      } else if (isTypeArray(ls->getType())) {
+        if (isTypeArray(rs->getType())) {
+          dynamic_cast<Lvalue*>(ls.get())->setValue(
+              std::make_unique<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(rs->getRvalue()))
+          );
+        } else {
+          dynamic_cast<Lvalue*>(ls.get())->setValue(
+              std::make_unique<ArrayRvalue>(TYPE_ARRAY(getListElementType(rs->getType())),
+                  dynamic_cast<const ListRvalue*>(rs->getRvalue())->getValue())
+          );
+        }
       }
       return ls;
     case BinaryOperatorNode::ADD_ASSIGN:
@@ -242,8 +282,33 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
         std::string ans;
         ans += s[ii];
         return std::make_unique<StringRvalue>(ans);
+      } else {
+        auto arr = dynamic_cast<const ArrayRvalue*>(ls->getRvalue());
+        int arrSize = static_cast<int>(arr->getValue()->size());
+        if (ii < 0) {
+          ii += arrSize;
+        }
+        if (ii < 0 || ii >= arrSize) {
+          throw RuntimeError("array index out of bounds");
+        }
+        if (ls->getMemoryClass() == Value::LVALUE) {
+          return std::make_unique<ElementLvalue>(dynamic_cast<const Lvalue*>(ls.get())->name, std::vector<int>(1, ii));
+          // TODO: make it work for nested arrays
+        }
+        const auto& elem = dynamic_cast<ArrayRvalue*>(ls.get())->getValue()->at(ii);
+        if (elem->getType() == TYPE_BOOLEAN) {
+          return std::make_unique<BooleanRvalue>(dynamic_cast<BooleanRvalue*>(elem.get())->getValue());
+        }
+        if (elem->getType() == TYPE_NUMBER) {
+          return std::make_unique<NumberRvalue>(dynamic_cast<NumberRvalue*>(elem.get())->getValue());
+        }
+        if (elem->getType() == TYPE_STRING) {
+          return std::make_unique<StringRvalue>(dynamic_cast<StringRvalue*>(elem.get())->getValue());
+        }
+        if (isTypeArray(elem->getType())) {
+          return std::make_unique<ArrayRvalue>(*dynamic_cast<ArrayRvalue*>(elem.get()));
+        }
       }
-      // TODO: array
   }
 }
 

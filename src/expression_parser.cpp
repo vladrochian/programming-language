@@ -163,8 +163,7 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseIndexOperatorLevel(TokenI
     ++iter;
     node = std::make_unique<BinaryOperatorNode>(BinaryOperatorNode::INDEX, std::move(node), parseAssignmentLevel(iter));
     if (!isOperator(*iter) || getOperator(*iter) != OP_CLOSING_SQUARE) {
-      auto location = (*iter)->getLocation();
-      throw SyntaxError(location.first, location.second, "expected closing square bracket");
+      throw SyntaxError((*iter)->getLocation(), "expected closing square bracket");
     }
     ++iter;
   }
@@ -172,7 +171,6 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseIndexOperatorLevel(TokenI
 }
 
 std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) {
-  auto location = (*iter)->getLocation();
   std::unique_ptr<ExpressionNode> node;
   switch ((*iter)->getType()) {
     case Token::BOOLEAN:
@@ -185,18 +183,33 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) 
       // TODO: function call
       return std::make_unique<VariableNode>(std::dynamic_pointer_cast<IdentifierToken>(*(iter++))->getName());
     case Token::OPERATOR:
+      if (getOperator(*iter) == OP_OPENING_SQUARE) {
+        ++iter;
+        std::vector<std::unique_ptr<ExpressionNode>> elements;
+        if ((*iter)->getType() == Token::OPERATOR && getOperator(*iter) == OP_CLOSING_SQUARE) {
+          return std::make_unique<ListValueNode>(std::move(elements));
+        }
+        elements.emplace_back(parseAssignmentLevel(iter));
+        while ((*iter)->getType() == Token::OPERATOR && getOperator(*iter) == OP_COMMA) {
+          elements.emplace_back(parseAssignmentLevel(++iter));
+        }
+        if ((*iter)->getType() != Token::OPERATOR || getOperator(*iter) != OP_CLOSING_SQUARE) {
+          throw SyntaxError((*iter)->getLocation(), "expected closing square bracket or comma");
+        }
+        ++iter;
+        return std::make_unique<ListValueNode>(std::move(elements));
+      }
       if (getOperator(*iter) != OP_OPENING_ROUND) {
-        throw SyntaxError(location.first, location.second,
-            "expected open parenthesis, unary operator or operand");
+        throw SyntaxError((*iter)->getLocation(), "expected open parenthesis, unary operator or operand");
       }
       node = parseAssignmentLevel(++iter);
       if (!isOperator(*iter) || getOperator(*iter) != OP_CLOSING_ROUND) {
-        throw SyntaxError(location.first, location.second, "expected binary operator or closing parenthesis");
+        throw SyntaxError((*iter)->getLocation(), "expected binary operator or closing parenthesis");
       }
       ++iter;
       return node;
     default:
-      throw SyntaxError(location.first, location.second, "expected open parenthesis, unary operator or operand");
+      throw SyntaxError((*iter)->getLocation(), "expected open parenthesis, unary operator or operand");
   }
 }
 

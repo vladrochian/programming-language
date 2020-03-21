@@ -1,15 +1,15 @@
 #include "types.h"
 
 namespace {
-const int BASE = 7;
+const int BASE = 8;
 }
 
 int TYPE_ARRAY(int type) {
-  return BASE * type + 4;
+  return BASE * type + 5;
 }
 
 bool isTypeArray(int type) {
-  return type % BASE == 4;
+  return type % BASE == 5;
 }
 
 int getArrayElementType(int arrayType) {
@@ -17,11 +17,11 @@ int getArrayElementType(int arrayType) {
 }
 
 int TYPE_OBJ(int temp) {
-  return BASE * temp + 5;
+  return BASE * temp + 6;
 }
 
 bool isTypeObj(int type) {
-  return type % BASE == 5;
+  return type % BASE == 6;
 }
 
 int getObjTemplate(int objType) {
@@ -29,14 +29,13 @@ int getObjTemplate(int objType) {
 }
 
 int TYPE_LIST(int type) {
-  return BASE * type + 6;
+  return BASE * type + 7;
 }
 
 bool isTypeList(int type) {
-  return type % BASE == 6;
+  return type % BASE == 7;
 }
 
 int getListElementType(int listType) {
   return listType / BASE;
 }
-

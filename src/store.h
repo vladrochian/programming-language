@@ -23,15 +23,16 @@ class ObjectData {
 class VariableData : public ObjectData {
  public:
   VariableData(int type, std::unique_ptr<Value> value) : value() {
-    auto v = value ? value.get() : nullptr;
+    const auto v = value ? value->getRvalue() : nullptr;
     if (type == TYPE_BOOLEAN) {
-      this->value = std::make_unique<BooleanRvalue>(value ? dynamic_cast<BooleanRvalue*>(v)->getValue() : false);
+      this->value = std::make_unique<BooleanRvalue>(value ? dynamic_cast<const BooleanRvalue*>(v)->getValue() : false);
     } else if (type == TYPE_NUMBER) {
-      this->value = std::make_unique<NumberRvalue>(value ? dynamic_cast<NumberRvalue*>(v)->getValue() : 0.0);
+      this->value = std::make_unique<NumberRvalue>(value ? dynamic_cast<const NumberRvalue*>(v)->getValue() : 0.0);
     } else if (type == TYPE_STRING) {
-      this->value = std::make_unique<StringRvalue>(value ? dynamic_cast<StringRvalue*>(v)->getValue() : std::string());
+      this->value = std::make_unique<StringRvalue>(value ? dynamic_cast<const StringRvalue*>(v)->getValue() : std::string());
     } else if (isTypeArray(type)) {
-      // TODO
+      this->value = value ? std::make_unique<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(v))
+                          : std::make_unique<ArrayRvalue>(type);
     } else if (isTypeObj(type)) {
 
     }
@@ -61,6 +62,7 @@ class Store {
   void registerName(const std::string& name, std::unique_ptr<ObjectData> objectData);
   const std::unique_ptr<Rvalue>& getValue(const std::string& name) const;
   void setValue(const std::string& name, std::unique_ptr<Rvalue> value);
+  void setValue(const std::string& name, std::vector<int> index, std::unique_ptr<Rvalue> value);
   void newLevel();
   void deleteLevel();
 

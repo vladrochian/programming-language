@@ -117,3 +117,13 @@ Node::Type WhileNode::getType() const { return WHILE_STATEMENT; }
 const std::unique_ptr<ExpressionNode>& WhileNode::getCondition() const { return condition; }
 
 const std::unique_ptr<BlockNode>& WhileNode::getBlock() const { return block; }
+
+ListValueNode::ListValueNode(std::vector<std::unique_ptr<ExpressionNode>> elements) : elements(std::move(elements)) {}
+
+Node::Type ListValueNode::getType() const {
+  return LIST_VALUE;
+}
+
+const std::vector<std::unique_ptr<ExpressionNode>>& ListValueNode::getElements() const {
+  return elements;
+}

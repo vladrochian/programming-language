@@ -44,6 +44,9 @@ void SemanticAnalyzer::analyze(Node* node) {
       if (type == TYPE_NONE) {
         if (isTypeList(exprType)) {
           if (getListElementType(exprType) == TYPE_NONE) {
+            throw SemanticError("cannot deduce array type from an empty list");
+          }
+          if (getListElementType(exprType) == TYPE_MIXED) {
             throw SemanticError("multiple type list passed as initializer for array");
           }
           type = TYPE_ARRAY(getListElementType(exprType));
@@ -51,10 +54,10 @@ void SemanticAnalyzer::analyze(Node* node) {
           type = exprType;
         }
       } else if (isTypeArray(type) && isTypeList(exprType)) {
-        if (getListElementType(exprType) == TYPE_NONE) {
+        if (getListElementType(exprType) == TYPE_MIXED) {
           throw SemanticError("multiple type list passed as initializer for array");
         }
-        if (getArrayElementType(type) != getListElementType(exprType)) {
+        if (getListElementType(exprType) != TYPE_NONE && getArrayElementType(type) != getListElementType(exprType)) {
           throw SemanticError("array and initializer list types do not match");
         }
       } else if (isTypeObj(type) && isTypeList(exprType)) {
@@ -101,6 +104,21 @@ int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
       return TYPE_NUMBER;
     case Node::STRING_VALUE:
       return TYPE_STRING;
+    case Node::LIST_VALUE: {
+      int lt = TYPE_NONE;
+      for (const auto& element : dynamic_cast<ListValueNode*>(node)->getElements()) {
+        int type = getExpressionType(element.get());
+        if (type == TYPE_NONE) {
+          throw SemanticError("void expressions are not allowed in lists");
+        }
+        if (lt == TYPE_NONE) {
+          lt = type;
+        } else if (type != lt) {
+          lt = TYPE_MIXED;
+        }
+      }
+      return TYPE_LIST(lt);
+    }
     case Node::UNARY_OPERATOR:
       return getResultType(unOpNode->getOperator(), getExpressionType(unOpNode->getOperand().get()));
     case Node::BINARY_OPERATOR:
@@ -142,8 +160,7 @@ int SemanticAnalyzer::getResultType(UnaryOperatorNode::UnaryOperator op, int typ
   throw SemanticError("invalid operand");
 }
 
-int SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, int lhs,
-                                              int rhs) {
+int SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, int lhs, int rhs) {
   switch (op) {
     case BinaryOperatorNode::ADD:
       if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
@@ -163,6 +180,11 @@ int SemanticAnalyzer::getResultType(BinaryOperatorNode::BinaryOperator op, int l
       if (lhs == TYPE_BOOLEAN && rhs == TYPE_BOOLEAN) return TYPE_BOOLEAN;
       if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
       if (lhs == TYPE_STRING && rhs == TYPE_STRING) return TYPE_STRING;
+      if (isTypeArray(lhs) && rhs == lhs) return lhs;
+      if (isTypeArray(lhs) && isTypeList(rhs)
+          && (getArrayElementType(lhs) == getListElementType(rhs) || getListElementType(rhs) == TYPE_NONE)) {
+        return lhs;
+      }
       break;
     case BinaryOperatorNode::ADD_ASSIGN:
       if (lhs == TYPE_NUMBER && rhs == TYPE_NUMBER) return TYPE_NUMBER;
@@ -213,6 +235,9 @@ Value::MemoryClass SemanticAnalyzer::getMemoryClass(UnaryOperatorNode::UnaryOper
 
 Value::MemoryClass SemanticAnalyzer::getMemoryClass(BinaryOperatorNode::BinaryOperator op, Value::MemoryClass lhs,
                                                     Value::MemoryClass) {
+  if (op == BinaryOperatorNode::INDEX) {
+    return lhs;
+  }
   if (op == BinaryOperatorNode::ASSIGN || op == BinaryOperatorNode::ADD_ASSIGN ||
       op == BinaryOperatorNode::SUBTRACT_ASSIGN || op == BinaryOperatorNode::MULTIPLY_ASSIGN ||
       op == BinaryOperatorNode::DIVIDE_ASSIGN || op == BinaryOperatorNode::REMAINDER_ASSIGN ||

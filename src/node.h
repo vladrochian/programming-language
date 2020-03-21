@@ -18,6 +18,7 @@ class Node {
     BOOLEAN_VALUE,
     NUMBER_VALUE,
     STRING_VALUE,
+    LIST_VALUE,
     OBJECT,
     VARIABLE,
     FUNCTION_CALL,
@@ -78,6 +79,16 @@ class StringValueNode : public ExpressionNode {
 
  private:
   std::string value;
+};
+
+class ListValueNode : public ExpressionNode {
+ public:
+  explicit ListValueNode(std::vector<std::unique_ptr<ExpressionNode>> elements);
+  Type getType() const override;
+  const std::vector<std::unique_ptr<ExpressionNode>>& getElements() const;
+
+ private:
+  std::vector<std::unique_ptr<ExpressionNode>> elements;
 };
 
 class UnaryOperatorNode : public ExpressionNode {

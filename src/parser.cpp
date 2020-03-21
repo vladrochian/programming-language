@@ -8,8 +8,7 @@ std::unique_ptr<BlockNode> Parser::parseFile(const TokenList& file) {
   auto iter = file.begin();
   auto node = parseBlock(iter);
   if ((*iter)->getType() != Token::END_OF_FILE) {
-    auto location = (*iter)->getLocation();
-    throw SyntaxError(location.first, location.second, "expected end of file");
+    throw SyntaxError((*iter)->getLocation(), "expected end of file");
   }
   return node;
 }
@@ -57,7 +56,8 @@ Parser::Type Parser::getInstructionType(const TokenList& tokenList) {
 std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
   int baseIndent = std::dynamic_pointer_cast<IndentToken>(*iter)->getSize();
   std::vector<std::unique_ptr<Node>> nodeList;
-  while ((*iter)->getType() != Token::END_OF_FILE && std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() == baseIndent) {
+  while ((*iter)->getType() != Token::END_OF_FILE &&
+         std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() == baseIndent) {
     // TODO: multiple lines instruction
     auto currentInstruction = parseInstruction(iter);
     std::unique_ptr<Node> node;
@@ -69,8 +69,7 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
       case EXPRESSION:
         node = parseExpression(it);
         if ((*it)->getType() != Token::LINE_FEED) {
-          auto location = (*it)->getLocation();
-          throw SyntaxError(location.first, location.second, "expected operator or end of expression");
+          throw SyntaxError((*it)->getLocation(), "expected operator or end of expression");
         }
         break;
       case VARIABLE_DECLARATION:
@@ -87,9 +86,9 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         break;
       case IF:
         condition = parseCondition(currentInstruction);
-        if ((*iter)->getType() != Token::INDENT || std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
-          auto location = (*iter)->getLocation();
-          throw SyntaxError(location.first, location.second, "expected if block");
+        if ((*iter)->getType() != Token::INDENT ||
+            std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
+          throw SyntaxError((*iter)->getLocation(), "expected if block");
         }
         block1 = parseBlock(iter);
         block2 = nullptr;
@@ -99,9 +98,9 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
           if (currentInstruction[0]->getType() == Token::INDENT &&
               std::dynamic_pointer_cast<IndentToken>(currentInstruction[0])->getSize() == baseIndent &&
               getInstructionType(currentInstruction) == ELSE) {
-            if ((*it)->getType() != Token::INDENT || std::dynamic_pointer_cast<IndentToken>(*it)->getSize() <= baseIndent) {
-              auto location = (*it)->getLocation();
-              throw SyntaxError(location.first, location.second, "expected else block");
+            if ((*it)->getType() != Token::INDENT ||
+                std::dynamic_pointer_cast<IndentToken>(*it)->getSize() <= baseIndent) {
+              throw SyntaxError((*it)->getLocation(), "expected else block");
             }
             iter = it;
             block2 = parseBlock(iter);
@@ -111,9 +110,9 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         break;
       case WHILE:
         condition = parseCondition(currentInstruction);
-        if ((*iter)->getType() != Token::INDENT || std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
-          auto location = (*iter)->getLocation();
-          throw SyntaxError(location.first, location.second, "expected while block");
+        if ((*iter)->getType() != Token::INDENT ||
+            std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
+          throw SyntaxError((*iter)->getLocation(), "expected while block");
         }
         block1 = parseBlock(iter);
         node = std::make_unique<WhileNode>(std::move(condition), std::move(block1));
@@ -134,12 +133,12 @@ std::unique_ptr<StandaloneExpressionNode> Parser::parseExpression(TokenIter& ite
 std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const TokenList& tokenList) {
   // TODO: initialization
   if (tokenList.size() < 5) {
-    auto location = tokenList.back()->getLocation();
-    throw SyntaxError(location.first, location.second, "expected type name or initializer");
+    throw SyntaxError(tokenList.back()->getLocation(), "expected type name or initializer");
   }
   std::string id = std::dynamic_pointer_cast<IdentifierToken>(tokenList[1])->getName();
   int type;
   std::unique_ptr<ExpressionNode> initializer;
+  auto iter = tokenList.begin() + 3;
   if (tokenList[3]->getType() == Token::KEYWORD) {
     switch (std::dynamic_pointer_cast<KeywordToken>(tokenList[3])->getKeyword()) {
       case KEYWORD_BOOLEAN:
@@ -151,32 +150,67 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const 
       case KEYWORD_STRING:
         type = TYPE_STRING;
         break;
-      default:
-        auto location = tokenList[3]->getLocation();
-        throw SyntaxError(location.first, location.second, "expected type name or initializer");
-    }
-    if (tokenList.size() > 5 && tokenList[4]->getType() == Token::OPERATOR
-      && std::dynamic_pointer_cast<OperatorToken>(tokenList[4])->getOperator() == OP_EQUALS) {
-      if (tokenList[5]->getType() == Token::LINE_FEED) {
-        auto location = tokenList[5]->getLocation();
-        throw SyntaxError(location.first, location.second, "expected expression");
+      case KEYWORD_ARRAY: {
+        int nestedArrays = 0;
+        while ((*iter)->getType() == Token::KEYWORD
+               && std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword() == KEYWORD_ARRAY) {
+          ++nestedArrays;
+          ++iter;
+          if ((*iter)->getType() != Token::OPERATOR
+              || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_LESS_THAN) {
+            throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
+          }
+          ++iter;
+        }
+        if ((*iter)->getType() != Token::KEYWORD) {
+          throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
+        }
+        switch (std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword()) {
+          case KEYWORD_BOOLEAN:
+            type = TYPE_BOOLEAN;
+            break;
+          case KEYWORD_NUMBER:
+            type = TYPE_NUMBER;
+            break;
+          case KEYWORD_STRING:
+            type = TYPE_STRING;
+            break;
+          default:
+            throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
+        }
+        while (nestedArrays--) {
+          ++iter;
+          if ((*iter)->getType() != Token::OPERATOR
+              || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_GREATER_THAN) {
+            throw SyntaxError((*iter)->getLocation(), "expected closing angular bracket");
+          }
+          type = TYPE_ARRAY(type);
+        }
       }
-      auto iter = tokenList.begin() + 5;
+      break;
+      default:
+        throw SyntaxError(tokenList[3]->getLocation(), "expected type name or initializer");
+    }
+    ++iter;
+    if ((*iter)->getType() == Token::OPERATOR
+        && std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() == OP_EQUALS) {
+      ++iter;
+      if ((*iter)->getType() == Token::LINE_FEED) {
+        throw SyntaxError(tokenList[5]->getLocation(), "expected expression");
+      }
       initializer = ExpressionParser::parse(iter);
     }
   } else if (tokenList[3]->getType() == Token::OPERATOR
-    && std::dynamic_pointer_cast<OperatorToken>(tokenList[3])->getOperator() == OP_EQUALS) {
+             && std::dynamic_pointer_cast<OperatorToken>(tokenList[3])->getOperator() == OP_EQUALS) {
     type = TYPE_NONE;
     auto iter = tokenList.begin() + 4;
     if (tokenList[4]->getType() == Token::LINE_FEED) {
-      auto location = tokenList[4]->getLocation();
-      throw SyntaxError(location.first, location.second, "expected expression");
+      throw SyntaxError(tokenList[4]->getLocation(), "expected expression");
     }
     initializer = ExpressionParser::parse(iter);
   } else {
     // TODO: object; implement this
-    auto location = tokenList[3]->getLocation();
-    throw SyntaxError(location.first, location.second, "expected type name or initializer");
+    throw SyntaxError(tokenList[3]->getLocation(), "expected type name or initializer");
   }
   return std::make_unique<VariableDeclarationNode>(id, type, std::move(initializer));
 }
@@ -184,8 +218,7 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const 
 std::unique_ptr<ReturnInstructionNode> Parser::parseReturnStatement(const TokenList& tokenList) {
   auto iter = tokenList.begin() + 2;
   if ((*iter)->getType() == Token::LINE_FEED) {
-    auto location = (*iter)->getLocation();
-    throw SyntaxError(location.first, location.second, "expected expression");
+    throw SyntaxError((*iter)->getLocation(), "expected expression");
   }
   return std::make_unique<ReturnInstructionNode>(ExpressionParser::parse(iter));
 }
@@ -193,8 +226,7 @@ std::unique_ptr<ReturnInstructionNode> Parser::parseReturnStatement(const TokenL
 std::unique_ptr<PrintInstructionNode> Parser::parsePrintStatement(const TokenList& tokenList) {
   auto iter = tokenList.begin() + 2;
   if ((*iter)->getType() == Token::LINE_FEED) {
-    auto location = (*iter)->getLocation();
-    throw SyntaxError(location.first, location.second, "expected expression");
+    throw SyntaxError((*iter)->getLocation(), "expected expression");
   }
   return std::make_unique<PrintInstructionNode>(ExpressionParser::parse(iter));
 }
@@ -202,8 +234,7 @@ std::unique_ptr<PrintInstructionNode> Parser::parsePrintStatement(const TokenLis
 std::unique_ptr<ReadInstructionNode> Parser::parseReadStatement(const TokenList& tokenList) {
   auto iter = tokenList.begin() + 2;
   if ((*iter)->getType() == Token::LINE_FEED) {
-    auto location = (*iter)->getLocation();
-    throw SyntaxError(location.first, location.second, "expected expression");
+    throw SyntaxError((*iter)->getLocation(), "expected expression");
   }
   return std::make_unique<ReadInstructionNode>(ExpressionParser::parse(iter));
 }
@@ -211,8 +242,7 @@ std::unique_ptr<ReadInstructionNode> Parser::parseReadStatement(const TokenList&
 std::unique_ptr<ExpressionNode> Parser::parseCondition(const TokenList& tokenList) {
   auto iter = tokenList.begin() + 2;
   if ((*iter)->getType() == Token::LINE_FEED) {
-    auto location = (*iter)->getLocation();
-    throw SyntaxError(location.first, location.second, "expected expression");
+    throw SyntaxError((*iter)->getLocation(), "expected expression");
   }
   return ExpressionParser::parse(iter);
 }

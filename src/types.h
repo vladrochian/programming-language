@@ -5,6 +5,7 @@ const int TYPE_NONE = 0;
 const int TYPE_BOOLEAN = 1;
 const int TYPE_NUMBER = 2;
 const int TYPE_STRING = 3;
+const int TYPE_MIXED = 4;
 
 int TYPE_ARRAY(int type);
 bool isTypeArray(int type);

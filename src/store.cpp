@@ -29,6 +29,19 @@ void Store::setValue(const std::string& name, std::unique_ptr<Rvalue> value) {
   var->setValue(std::move(value));
 }
 
+void Store::setValue(const std::string& name, std::vector<int> index, std::unique_ptr<Rvalue> value) {
+  auto rv = getVariableData(name)->getValue().get();
+  int last = index.back();
+  index.pop_back();
+  for (int i : index) {
+    rv = dynamic_cast<ArrayRvalue*>(rv)->getValue()->at(i).get();
+  }
+  if (getArrayElementType(rv->getType()) != value->getType()) {
+    throw SemanticError("incompatible type for assignment to " + name);
+  }
+  (*dynamic_cast<ArrayRvalue*>(rv)->getValue())[last] = std::move(value);
+}
+
 void Store::newLevel() { stk.emplace_back(); }
 
 void Store::deleteLevel() { stk.pop_back(); }

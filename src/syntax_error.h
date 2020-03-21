@@ -9,6 +9,8 @@ class SyntaxError : public Error {
  public:
   SyntaxError(int line, int col, std::string message) : line(line), col(col), message(std::move(message)) {}
 
+  SyntaxError(const std::pair<int, int>& loc, std::string message) : SyntaxError(loc.first, loc.second, std::move(message)) {}
+
   std::string toString() const noexcept override {
     std::ostringstream os;
     os << "Syntax error (line " << line << ", col " << col << "): " << message;
