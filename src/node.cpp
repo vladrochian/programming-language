@@ -141,7 +141,7 @@ const std::unique_ptr<ExpressionNode>& ForNode::getRangeExpression() const { ret
 const std::unique_ptr<BlockNode>& ForNode::getBlock() const { return block; }
 
 FunctionDefinitionNode::FunctionDefinitionNode(std::string name, std::vector<std::pair<std::string, int>> arguments,
-                                               int returnType, std::unique_ptr<BlockNode> block)
+                                               int returnType, std::shared_ptr<BlockNode> block)
     : name(std::move(name)), arguments(std::move(arguments)), returnType(returnType), block(std::move(block)) {}
 
 Node::Type FunctionDefinitionNode::getType() const { return FUNCTION_DEFINITION; }
@@ -152,6 +152,6 @@ const std::vector<std::pair<std::string, int>>& FunctionDefinitionNode::getArgum
 
 int FunctionDefinitionNode::getReturnType() const { return returnType; }
 
-const std::unique_ptr<BlockNode>& FunctionDefinitionNode::getBlock() const {
+const std::shared_ptr<BlockNode>& FunctionDefinitionNode::getBlock() const {
   return block;
 }
