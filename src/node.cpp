@@ -127,3 +127,14 @@ Node::Type ListValueNode::getType() const {
 const std::vector<std::unique_ptr<ExpressionNode>>& ListValueNode::getElements() const {
   return elements;
 }
+
+ForNode::ForNode(std::string it, std::unique_ptr<ExpressionNode> range, std::unique_ptr<BlockNode> block)
+  : it(std::move(it)), range(std::move(range)), block(std::move(block)) {}
+
+Node::Type ForNode::getType() const { return FOR_STATEMENT; }
+
+std::string ForNode::getIterName() const { return it; }
+
+const std::unique_ptr<ExpressionNode>& ForNode::getRangeExpression() const { return range; }
+
+const std::unique_ptr<BlockNode>& ForNode::getBlock() const { return block; }

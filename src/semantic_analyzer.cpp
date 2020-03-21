@@ -86,6 +86,18 @@ void SemanticAnalyzer::analyze(Node* node) {
       throw SemanticError("while condition should have boolean type");
     }
     analyze(whileNode->getBlock().get());
+  } else if (node->getType() == Node::FOR_STATEMENT) {
+    auto forNode = dynamic_cast<ForNode*>(node);
+    auto range = forNode->getRangeExpression().get();
+    analyzeExpr(range);
+    int eType = getExpressionType(range);
+    if (eType != TYPE_STRING && !isTypeArray(eType)) {
+      throw SemanticError("iteration can only be performed on strings and arrays");
+    }
+    store.newLevel();
+    int elemType = eType == TYPE_STRING ? TYPE_STRING : getArrayElementType(eType);
+    store.registerName(forNode->getIterName(), std::make_unique<VariableData>(elemType, nullptr));
+    analyze(forNode->getBlock().get());
   }
 }
 

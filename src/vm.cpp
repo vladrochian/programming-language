@@ -77,7 +77,8 @@ void VirtualMachine::run(Node* node) {
         }
       }
       if (isTypeList(exprType)) {
-        exprRet = std::make_unique<ArrayRvalue>(type, dynamic_cast<const ListRvalue*>(exprRet->getRvalue())->getValue());
+        exprRet = std::make_unique<ArrayRvalue>(type,
+            dynamic_cast<const ListRvalue*>(exprRet->getRvalue())->getValue());
       }
     }
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, std::move(exprRet)));
@@ -92,6 +93,40 @@ void VirtualMachine::run(Node* node) {
     auto whileNode = dynamic_cast<WhileNode*>(node);
     while (getBooleanValue(evalExp(whileNode->getCondition().get()))) {
       run(whileNode->getBlock().get());
+    }
+  } else if (node->getType() == Node::FOR_STATEMENT) {
+    auto forNode = dynamic_cast<ForNode*>(node);
+    auto range = evalExp(forNode->getRangeExpression().get());
+    if (range->getType() == TYPE_STRING) {
+      auto s = dynamic_cast<const StringRvalue*>(range->getRvalue())->getValue();
+      for (char c : s) {
+        std::string cs;
+        cs += c;
+        store.newLevel();
+        store.registerName(forNode->getIterName(),
+            std::make_unique<VariableData>(TYPE_STRING, std::make_unique<StringRvalue>(cs)));
+        run(forNode->getBlock().get());
+      }
+    } else {
+      const auto& arr = *dynamic_cast<const ArrayRvalue*>(range->getRvalue())->getValue();
+      for (const auto& it : arr) {
+        auto rv = it->getRvalue();
+        int type = rv->getType();
+        std::unique_ptr<Value> elem;
+        if (type == TYPE_BOOLEAN) {
+          elem = std::make_unique<BooleanRvalue>(dynamic_cast<const BooleanRvalue*>(rv)->getValue());
+        } else if (type == TYPE_NUMBER) {
+          elem = std::make_unique<NumberRvalue>(dynamic_cast<const NumberRvalue*>(rv)->getValue());
+        } else if (type == TYPE_STRING) {
+          elem = std::make_unique<StringRvalue>(dynamic_cast<const StringRvalue*>(rv)->getValue());
+        } else {
+          elem = std::make_unique<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(rv));
+        }
+        store.newLevel();
+        store.registerName(forNode->getIterName(),
+            std::make_unique<VariableData>(getArrayElementType(range->getType()), std::move(elem)));
+        run(forNode->getBlock().get());
+      }
     }
   }
 }

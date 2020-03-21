@@ -117,6 +117,31 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         block1 = parseBlock(iter);
         node = std::make_unique<WhileNode>(std::move(condition), std::move(block1));
         break;
+      case FOR: {
+        if (currentInstruction[2]->getType() != Token::IDENTIFIER) {
+          throw SyntaxError(currentInstruction[2]->getLocation(), "expected identifier");
+        }
+        if (currentInstruction[3]->getType() != Token::OPERATOR
+            || std::dynamic_pointer_cast<OperatorToken>(currentInstruction[3])->getOperator() != OP_COLON) {
+          throw SyntaxError(currentInstruction[3]->getLocation(), "expected colon");
+        }
+        if (currentInstruction[4]->getType() == Token::LINE_FEED) {
+          throw SyntaxError(currentInstruction[4]->getLocation(), "expected expression");
+        }
+        auto i = currentInstruction.cbegin() + 4;
+        auto loop = ExpressionParser::parse(i);
+        if ((*iter)->getType() != Token::INDENT ||
+            std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
+          throw SyntaxError((*iter)->getLocation(), "expected while block");
+        }
+        block1 = parseBlock(iter);
+        node = std::make_unique<ForNode>(
+            std::dynamic_pointer_cast<IdentifierToken>(currentInstruction[2])->getName(),
+            std::move(loop),
+            std::move(block1)
+        );
+        break;
+      }
       default:
         // TODO: implement structures
         break;
@@ -187,7 +212,7 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const 
           type = TYPE_ARRAY(type);
         }
       }
-      break;
+        break;
       default:
         throw SyntaxError(tokenList[3]->getLocation(), "expected type name or initializer");
     }

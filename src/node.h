@@ -29,7 +29,8 @@ class Node {
     PRINT_INSTRUCTION,
     READ_INSTRUCTION,
     IF_STATEMENT,
-    WHILE_STATEMENT
+    WHILE_STATEMENT,
+    FOR_STATEMENT
   };
 
   virtual ~Node() = default;
@@ -237,6 +238,20 @@ class WhileNode : public Node {
 
  private:
   std::unique_ptr<ExpressionNode> condition;
+  std::unique_ptr<BlockNode> block;
+};
+
+class ForNode : public Node {
+ public:
+  ForNode(std::string it, std::unique_ptr<ExpressionNode> range, std::unique_ptr<BlockNode> block);
+  Type getType() const override;
+  std::string getIterName() const;
+  const std::unique_ptr<ExpressionNode>& getRangeExpression() const;
+  const std::unique_ptr<BlockNode>& getBlock() const;
+
+ private:
+  std::string it;
+  std::unique_ptr<ExpressionNode> range;
   std::unique_ptr<BlockNode> block;
 };
 
