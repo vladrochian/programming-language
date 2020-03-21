@@ -184,6 +184,23 @@ class VariableDeclarationNode : public Node {
   std::unique_ptr<ExpressionNode> initializer;
 };
 
+class FunctionDefinitionNode : public Node {
+ public:
+  FunctionDefinitionNode(std::string name, std::vector<std::pair<std::string, int>> arguments, int returnType,
+                         std::unique_ptr<BlockNode> block);
+  Type getType() const override;
+  std::string getFunctionName() const;
+  const std::vector<std::pair<std::string, int>>& getArguments() const;
+  int getReturnType() const;
+  const std::unique_ptr<BlockNode>& getBlock() const;
+
+ private:
+  std::string name;
+  std::vector<std::pair<std::string, int>> arguments;
+  int returnType;
+  std::unique_ptr<BlockNode> block;
+};
+
 class ReturnInstructionNode : public Node {
  public:
   explicit ReturnInstructionNode(std::unique_ptr<ExpressionNode> expression);

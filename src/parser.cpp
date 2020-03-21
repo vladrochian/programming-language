@@ -73,7 +73,19 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         }
         break;
       case VARIABLE_DECLARATION:
-        node = parseVariableDeclaration(currentInstruction);
+        if (currentInstruction[3]->getType() == Token::OPERATOR
+            && std::dynamic_pointer_cast<OperatorToken>(currentInstruction[3])->getOperator() == OP_OPENING_ROUND) {
+          auto sgn = parseFunctionSignature(currentInstruction);
+          if ((*iter)->getType() != Token::INDENT ||
+              std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
+            throw SyntaxError((*iter)->getLocation(), "expected function implementation");
+          }
+          block1 = parseBlock(iter);
+          node = std::make_unique<FunctionDefinitionNode>(std::get<0>(sgn), std::get<1>(sgn), std::get<2>(sgn),
+              std::move(block1));
+        } else {
+          node = parseVariableDeclaration(currentInstruction);
+        }
         break;
       case RETURN_STATEMENT:
         node = parseReturnStatement(currentInstruction);
@@ -132,7 +144,7 @@ std::unique_ptr<BlockNode> Parser::parseBlock(TokenIter& iter) {
         auto loop = ExpressionParser::parse(i);
         if ((*iter)->getType() != Token::INDENT ||
             std::dynamic_pointer_cast<IndentToken>(*iter)->getSize() <= baseIndent) {
-          throw SyntaxError((*iter)->getLocation(), "expected while block");
+          throw SyntaxError((*iter)->getLocation(), "expected for block");
         }
         block1 = parseBlock(iter);
         node = std::make_unique<ForNode>(
@@ -155,6 +167,47 @@ std::unique_ptr<StandaloneExpressionNode> Parser::parseExpression(TokenIter& ite
   return std::make_unique<StandaloneExpressionNode>(ExpressionParser::parse(++iter));
 }
 
+int Parser::parseType(TokenIter& iter) {
+  int nestedArrays = 0;
+  while ((*iter)->getType() == Token::KEYWORD
+         && std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword() == KEYWORD_ARRAY) {
+    ++nestedArrays;
+    ++iter;
+    if ((*iter)->getType() != Token::OPERATOR
+        || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_LESS_THAN) {
+      throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
+    }
+    ++iter;
+  }
+  if ((*iter)->getType() != Token::KEYWORD) {
+    throw SyntaxError((*iter)->getLocation(), "expected type specifier");
+  }
+  int type;
+  switch (std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword()) {
+    case KEYWORD_BOOLEAN:
+      type = TYPE_BOOLEAN;
+      break;
+    case KEYWORD_NUMBER:
+      type = TYPE_NUMBER;
+      break;
+    case KEYWORD_STRING:
+      type = TYPE_STRING;
+      break;
+    default:
+      throw SyntaxError((*iter)->getLocation(), "expected type specifier");
+  }
+  ++iter;
+  while (nestedArrays--) {
+    type = TYPE_ARRAY(type);
+    if ((*iter)->getType() != Token::OPERATOR
+        || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_GREATER_THAN) {
+      throw SyntaxError((*iter)->getLocation(), "expected closing angular bracket");
+    }
+    ++iter;
+  }
+  return type;
+}
+
 std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const TokenList& tokenList) {
   // TODO: initialization
   if (tokenList.size() < 5) {
@@ -165,58 +218,7 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const 
   std::unique_ptr<ExpressionNode> initializer;
   auto iter = tokenList.begin() + 3;
   if (tokenList[3]->getType() == Token::KEYWORD) {
-    switch (std::dynamic_pointer_cast<KeywordToken>(tokenList[3])->getKeyword()) {
-      case KEYWORD_BOOLEAN:
-        type = TYPE_BOOLEAN;
-        break;
-      case KEYWORD_NUMBER:
-        type = TYPE_NUMBER;
-        break;
-      case KEYWORD_STRING:
-        type = TYPE_STRING;
-        break;
-      case KEYWORD_ARRAY: {
-        int nestedArrays = 0;
-        while ((*iter)->getType() == Token::KEYWORD
-               && std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword() == KEYWORD_ARRAY) {
-          ++nestedArrays;
-          ++iter;
-          if ((*iter)->getType() != Token::OPERATOR
-              || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_LESS_THAN) {
-            throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
-          }
-          ++iter;
-        }
-        if ((*iter)->getType() != Token::KEYWORD) {
-          throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
-        }
-        switch (std::dynamic_pointer_cast<KeywordToken>(*iter)->getKeyword()) {
-          case KEYWORD_BOOLEAN:
-            type = TYPE_BOOLEAN;
-            break;
-          case KEYWORD_NUMBER:
-            type = TYPE_NUMBER;
-            break;
-          case KEYWORD_STRING:
-            type = TYPE_STRING;
-            break;
-          default:
-            throw SyntaxError((*iter)->getLocation(), "expected array type specifier");
-        }
-        while (nestedArrays--) {
-          ++iter;
-          if ((*iter)->getType() != Token::OPERATOR
-              || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_IS_GREATER_THAN) {
-            throw SyntaxError((*iter)->getLocation(), "expected closing angular bracket");
-          }
-          type = TYPE_ARRAY(type);
-        }
-      }
-        break;
-      default:
-        throw SyntaxError(tokenList[3]->getLocation(), "expected type name or initializer");
-    }
-    ++iter;
+    type = parseType(iter);
     if ((*iter)->getType() == Token::OPERATOR
         && std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() == OP_EQUALS) {
       ++iter;
@@ -238,6 +240,43 @@ std::unique_ptr<VariableDeclarationNode> Parser::parseVariableDeclaration(const 
     throw SyntaxError(tokenList[3]->getLocation(), "expected type name or initializer");
   }
   return std::make_unique<VariableDeclarationNode>(id, type, std::move(initializer));
+}
+
+std::tuple<std::string, std::vector<std::pair<std::string, int>>, int>
+Parser::parseFunctionSignature(const TokenList& tokenList) {
+  std::string name = std::dynamic_pointer_cast<IdentifierToken>(tokenList[1])->getName();
+  std::vector<std::pair<std::string, int>> arguments;
+  int returnType = TYPE_NONE;
+  auto iter = tokenList.cbegin() + 4;
+  while ((*iter)->getType() == Token::IDENTIFIER) {
+    auto pName = std::dynamic_pointer_cast<IdentifierToken>(*iter)->getName();
+    ++iter;
+    if ((*iter)->getType() != Token::OPERATOR
+        || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_COLON) {
+      throw SyntaxError((*iter)->getLocation(), "expected colon");
+    }
+    int pType = parseType(++iter);
+    arguments.emplace_back(std::move(pName), pType);
+    if ((*iter)->getType() != Token::OPERATOR) {
+      throw SyntaxError((*iter)->getLocation(), "expected comma or closing parenthesis");
+    }
+    if (std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() == OP_COMMA) {
+      ++iter;
+    }
+  }
+  if ((*iter)->getType() != Token::OPERATOR
+      || std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() != OP_CLOSING_ROUND) {
+    throw SyntaxError((*iter)->getLocation(), "expected closing parenthesis");
+  }
+  ++iter;
+  if ((*iter)->getType() == Token::OPERATOR
+      && std::dynamic_pointer_cast<OperatorToken>(*iter)->getOperator() == OP_COLON) {
+    returnType = parseType(++iter);
+  }
+  if ((*iter)->getType() != Token::LINE_FEED) {
+    throw SyntaxError((*iter)->getLocation(), "expected end of line");
+  }
+  return std::make_tuple(std::move(name), std::move(arguments), returnType);
 }
 
 std::unique_ptr<ReturnInstructionNode> Parser::parseReturnStatement(const TokenList& tokenList) {

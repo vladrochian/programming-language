@@ -8,7 +8,8 @@ Node::Type BlockNode::getType() const { return BLOCK; }
 
 const std::vector<std::unique_ptr<Node>>& BlockNode::getContent() const { return content; }
 
-VariableDeclarationNode::VariableDeclarationNode(std::string name, int type, std::unique_ptr<ExpressionNode> initializer)
+VariableDeclarationNode::VariableDeclarationNode(std::string name, int type,
+                                                 std::unique_ptr<ExpressionNode> initializer)
     : name(std::move(name)), type(type), initializer(std::move(initializer)) {}
 
 Node::Type VariableDeclarationNode::getType() const { return VARIABLE_DECLARATION; }
@@ -129,7 +130,7 @@ const std::vector<std::unique_ptr<ExpressionNode>>& ListValueNode::getElements()
 }
 
 ForNode::ForNode(std::string it, std::unique_ptr<ExpressionNode> range, std::unique_ptr<BlockNode> block)
-  : it(std::move(it)), range(std::move(range)), block(std::move(block)) {}
+    : it(std::move(it)), range(std::move(range)), block(std::move(block)) {}
 
 Node::Type ForNode::getType() const { return FOR_STATEMENT; }
 
@@ -138,3 +139,19 @@ std::string ForNode::getIterName() const { return it; }
 const std::unique_ptr<ExpressionNode>& ForNode::getRangeExpression() const { return range; }
 
 const std::unique_ptr<BlockNode>& ForNode::getBlock() const { return block; }
+
+FunctionDefinitionNode::FunctionDefinitionNode(std::string name, std::vector<std::pair<std::string, int>> arguments,
+                                               int returnType, std::unique_ptr<BlockNode> block)
+    : name(std::move(name)), arguments(std::move(arguments)), returnType(returnType), block(std::move(block)) {}
+
+Node::Type FunctionDefinitionNode::getType() const { return FUNCTION_DEFINITION; }
+
+std::string FunctionDefinitionNode::getFunctionName() const { return name; }
+
+const std::vector<std::pair<std::string, int>>& FunctionDefinitionNode::getArguments() const { return arguments; }
+
+int FunctionDefinitionNode::getReturnType() const { return returnType; }
+
+const std::unique_ptr<BlockNode>& FunctionDefinitionNode::getBlock() const {
+  return block;
+}
