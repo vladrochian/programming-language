@@ -99,7 +99,9 @@ void SemanticAnalyzer::analyze(Node* node, bool allowReturn, int retType) {
       }
     store.registerName(fncName, std::make_unique<FunctionData>(arguments, retType, fncDefNode->getBlock()));
     store.newLevel();
-    // TODO: register arguments
+    for (const auto& arg : arguments) {
+      store.registerName(arg.first, std::make_unique<VariableData>(arg.second, nullptr));
+    }
     analyze(fncDefNode->getBlock().get(), true, rt);
     store.deleteLevel();
   } else if (node->getType() == Node::IF_STATEMENT) {
