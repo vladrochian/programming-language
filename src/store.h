@@ -85,10 +85,12 @@ class Store {
   void setValue(const std::string& name, std::unique_ptr<Rvalue> value);
   void setValue(const std::string& name, std::vector<int> index, std::unique_ptr<Rvalue> value);
   void newLevel();
-  void deleteLevel();
+  FunctionData* getFunctionData(const std::string& name) const;
 
+  void deleteLevel();
  private:
   VariableData* getVariableData(const std::string& name) const;
+  ObjectData* getObjectData(const std::string& name) const;
   std::vector<StackLevel> stk;
 };
 

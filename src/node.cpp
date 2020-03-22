@@ -155,3 +155,18 @@ int FunctionDefinitionNode::getReturnType() const { return returnType; }
 const std::shared_ptr<BlockNode>& FunctionDefinitionNode::getBlock() const {
   return block;
 }
+
+FunctionCallNode::FunctionCallNode(std::string name, std::vector<std::unique_ptr<ExpressionNode>> arguments)
+    : fncName(std::move(name)), arguments(std::move(arguments)) {}
+
+Node::Type FunctionCallNode::getType() const {
+  return FUNCTION_CALL;
+}
+
+std::string FunctionCallNode::getFunctionName() const {
+  return fncName;
+}
+
+const std::vector<std::unique_ptr<ExpressionNode>>& FunctionCallNode::getArguments() const {
+  return arguments;
+}

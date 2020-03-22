@@ -179,9 +179,25 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) 
       return std::make_unique<NumberValueNode>(std::dynamic_pointer_cast<NumberToken>(*(iter++))->getValue());
     case Token::STRING:
       return std::make_unique<StringValueNode>(std::dynamic_pointer_cast<StringToken>(*(iter++))->getValue());
-    case Token::IDENTIFIER:
-      // TODO: function call
-      return std::make_unique<VariableNode>(std::dynamic_pointer_cast<IdentifierToken>(*(iter++))->getName());
+    case Token::IDENTIFIER: {
+      auto name = std::dynamic_pointer_cast<IdentifierToken>(*(iter++))->getName();
+      if ((*iter)->getType() == Token::OPERATOR && getOperator(*iter) == OP_OPENING_ROUND) {
+        std::vector<std::unique_ptr<ExpressionNode>> arguments;
+        ++iter;
+        if ((*iter)->getType() != Token::OPERATOR || getOperator(*iter) != OP_CLOSING_ROUND) {
+          arguments.emplace_back(parseAssignmentLevel(iter));
+          while ((*iter)->getType() == Token::OPERATOR && getOperator(*iter) == OP_COMMA) {
+            arguments.emplace_back(parseAssignmentLevel(++iter));
+          }
+          if ((*iter)->getType() != Token::OPERATOR || getOperator(*iter) != OP_CLOSING_ROUND) {
+            throw SyntaxError((*iter)->getLocation(), "expected closing parenthesis or comma");
+          }
+          ++iter;
+        }
+        return std::make_unique<FunctionCallNode>(name, std::move(arguments));
+      }
+      return std::make_unique<VariableNode>(name);
+    }
     case Token::OPERATOR:
       if (getOperator(*iter) == OP_OPENING_SQUARE) {
         ++iter;

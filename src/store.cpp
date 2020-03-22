@@ -50,13 +50,26 @@ void Store::newLevel() { stk.emplace_back(); }
 void Store::deleteLevel() { stk.pop_back(); }
 
 VariableData* Store::getVariableData(const std::string& name) const {
+  auto data = getObjectData(name);
+  if (data->getType() != ObjectData::VARIABLE) {
+    throw SemanticError(name + " is not a variable");
+  }
+  return dynamic_cast<VariableData*>(data);
+}
+
+FunctionData* Store::getFunctionData(const std::string& name) const {
+  auto data = getObjectData(name);
+  if (data->getType() != ObjectData::FUNCTION) {
+    throw SemanticError(name + " is not a function");
+  }
+  return dynamic_cast<FunctionData*>(data);
+}
+
+ObjectData* Store::getObjectData(const std::string& name) const {
   for (auto it = stk.rbegin(); it != stk.rend(); ++it) {
     ObjectData* data = it->lookupName(name);
     if (data != nullptr) {
-      if (data->getType() != ObjectData::VARIABLE) {
-        throw SemanticError(name + " is not a variable");
-      }
-      return dynamic_cast<VariableData*>(data);
+      return data;
     }
   }
   throw SemanticError(name + " is undefined in this context");

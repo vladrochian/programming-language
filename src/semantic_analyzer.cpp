@@ -160,6 +160,7 @@ int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
     case Node::LIST_VALUE: {
       int lt = TYPE_NONE;
       for (const auto& element : dynamic_cast<ListValueNode*>(node)->getElements()) {
+        analyzeExpr(element.get());
         int type = getExpressionType(element.get());
         if (type == TYPE_NONE) {
           throw SemanticError("void expressions are not allowed in lists");
@@ -179,6 +180,23 @@ int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
           getExpressionType(binOpNode->getRightOperand().get()));
     case Node::VARIABLE:
       return Lvalue(dynamic_cast<VariableNode*>(node)->getName()).getType();
+    case Node::FUNCTION_CALL: {
+      auto fncNode = dynamic_cast<FunctionCallNode*>(node);
+      auto fncData = store.getFunctionData(fncNode->getFunctionName());
+      int argc = fncData->getArguments().size();
+      if (fncNode->getArguments().size() != argc) {
+        throw SemanticError("number of arguments does not match");
+      }
+      for (int i = 0; i < argc; ++i) {
+        auto expr = fncNode->getArguments()[i].get();
+        analyzeExpr(expr);
+        int tp = getExpressionType(expr);
+        if (tp != fncData->getArguments()[i].second) {
+          throw SemanticError("argument type does not match");
+        }
+      }
+      return fncData->getReturnType();
+    }
     default:
       return TYPE_NONE;
   }
@@ -199,6 +217,8 @@ Value::MemoryClass SemanticAnalyzer::getExpressionMemoryClass(ExpressionNode* no
           getExpressionMemoryClass(binOpNode->getRightOperand().get()));
     case Node::VARIABLE:
       return Value::LVALUE;
+    case Node::FUNCTION_CALL:
+      return Value::RVALUE;
     default:
       break;
   }

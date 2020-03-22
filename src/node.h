@@ -160,6 +160,18 @@ class VariableNode : public ExpressionNode {
   std::string name;
 };
 
+class FunctionCallNode : public ExpressionNode {
+ public:
+  FunctionCallNode(std::string name, std::vector<std::unique_ptr<ExpressionNode>> arguments);
+  Type getType() const override;
+  std::string getFunctionName() const;
+  const std::vector<std::unique_ptr<ExpressionNode>>& getArguments() const;
+
+ private:
+  std::string fncName;
+  std::vector<std::unique_ptr<ExpressionNode>> arguments;
+};
+
 class StandaloneExpressionNode : public Node {
  public:
   explicit StandaloneExpressionNode(std::unique_ptr<ExpressionNode> expression);
