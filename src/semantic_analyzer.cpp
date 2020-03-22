@@ -97,7 +97,7 @@ void SemanticAnalyzer::analyze(Node* node, bool allowReturn, int retType) {
           throw SemanticError("cannot have multiple arguments with the same name");
         }
       }
-    store.registerName(fncName, std::make_unique<FunctionData>(arguments, retType, fncDefNode->getBlock()));
+    store.registerName(fncName, std::make_unique<FunctionData>(arguments, rt, fncDefNode->getBlock()));
     store.newLevel();
     for (const auto& arg : arguments) {
       store.registerName(arg.first, std::make_unique<VariableData>(arg.second, nullptr));

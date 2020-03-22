@@ -6,7 +6,7 @@
 
 class VirtualMachine {
  public:
-  static void run(Node* node);
+  static std::pair<bool, std::unique_ptr<Value>> run(Node* node);
 
  private:
   static std::unique_ptr<Value> evalExp(ExpressionNode* node);

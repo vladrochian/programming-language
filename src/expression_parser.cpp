@@ -189,11 +189,11 @@ std::unique_ptr<ExpressionNode> ExpressionParser::parseOperand(TokenIter& iter) 
           while ((*iter)->getType() == Token::OPERATOR && getOperator(*iter) == OP_COMMA) {
             arguments.emplace_back(parseAssignmentLevel(++iter));
           }
-          if ((*iter)->getType() != Token::OPERATOR || getOperator(*iter) != OP_CLOSING_ROUND) {
-            throw SyntaxError((*iter)->getLocation(), "expected closing parenthesis or comma");
-          }
-          ++iter;
         }
+        if ((*iter)->getType() != Token::OPERATOR || getOperator(*iter) != OP_CLOSING_ROUND) {
+          throw SyntaxError((*iter)->getLocation(), "expected closing parenthesis or comma");
+        }
+        ++iter;
         return std::make_unique<FunctionCallNode>(name, std::move(arguments));
       }
       return std::make_unique<VariableNode>(name);

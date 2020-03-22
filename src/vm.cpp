@@ -6,19 +6,39 @@
 #include "runtime_error.h"
 #include "store.h"
 
-void VirtualMachine::run(Node* node) {
+std::pair<bool, std::unique_ptr<Value>> VirtualMachine::run(Node* node) {
   if (node->getType() == Node::BLOCK) {
     auto blockNode = dynamic_cast<BlockNode*>(node);
     store.newLevel();
     for (const auto& it : blockNode->getContent()) {
-      run(it.get());
+      auto ret = run(it.get());
+      if (ret.first) {
+        store.deleteLevel();
+        return ret;
+      }
     }
     store.deleteLevel();
   } else if (node->getType() == Node::STANDALONE_EXPRESSION) {
     evalExp(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression().get());
   } else if (node->getType() == Node::RETURN_INSTRUCTION) {
-    // TODO: functions
-    evalExp(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
+    auto retNode = dynamic_cast<ReturnInstructionNode*>(node);
+    if (!retNode->getExpression()) {
+      return std::make_pair(true, nullptr);
+    }
+    auto retExprU = evalExp(retNode->getExpression().get());
+    auto retExpr = retExprU->getRvalue();
+    int type = retExpr->getType();
+    std::unique_ptr<Value> nv;
+    if (type == TYPE_BOOLEAN) {
+      nv = std::make_unique<BooleanRvalue>(dynamic_cast<const BooleanRvalue*>(retExpr)->getValue());
+    } else if (type == TYPE_NUMBER) {
+      nv = std::make_unique<NumberRvalue>(dynamic_cast<const NumberRvalue*>(retExpr)->getValue());
+    } else if (type == TYPE_STRING) {
+      nv = std::make_unique<StringRvalue>(dynamic_cast<const StringRvalue*>(retExpr)->getValue());
+    } else {
+      nv = std::make_unique<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(retExpr));
+    }
+    return std::make_pair(true, std::move(nv));
   } else if (node->getType() == Node::PRINT_INSTRUCTION) {
     auto value = evalExp(dynamic_cast<PrintInstructionNode*>(node)->getExpression().get());
     switch (value->getType()) {
@@ -82,17 +102,33 @@ void VirtualMachine::run(Node* node) {
       }
     }
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, std::move(exprRet)));
+  } else if (node->getType() == Node::FUNCTION_DEFINITION) {
+    auto fncDefNode = dynamic_cast<FunctionDefinitionNode*>(node);
+    store.registerName(fncDefNode->getFunctionName(), std::make_unique<FunctionData>(
+        fncDefNode->getArguments(),
+        fncDefNode->getReturnType(),
+        fncDefNode->getBlock()
+    ));
   } else if (node->getType() == Node::IF_STATEMENT) {
     auto ifNode = dynamic_cast<IfNode*>(node);
     if (getBooleanValue(evalExp(ifNode->getCondition().get()))) {
-      run(ifNode->getThenBlock().get());
+      auto ret = run(ifNode->getThenBlock().get());
+      if (ret.first) {
+        return std::move(ret);
+      }
     } else if (ifNode->getElseBlock() != nullptr) {
-      run(ifNode->getElseBlock().get());
+      auto ret = run(ifNode->getElseBlock().get());
+      if (ret.first) {
+        return std::move(ret);
+      }
     }
   } else if (node->getType() == Node::WHILE_STATEMENT) {
     auto whileNode = dynamic_cast<WhileNode*>(node);
     while (getBooleanValue(evalExp(whileNode->getCondition().get()))) {
-      run(whileNode->getBlock().get());
+      auto ret = run(whileNode->getBlock().get());
+      if (ret.first) {
+        return std::move(ret);
+      }
     }
   } else if (node->getType() == Node::FOR_STATEMENT) {
     auto forNode = dynamic_cast<ForNode*>(node);
@@ -105,13 +141,16 @@ void VirtualMachine::run(Node* node) {
         store.newLevel();
         store.registerName(forNode->getIterName(),
             std::make_unique<VariableData>(TYPE_STRING, std::make_unique<StringRvalue>(cs)));
-        run(forNode->getBlock().get());
+        auto ret = run(forNode->getBlock().get());
         store.deleteLevel();
+        if (ret.first) {
+          return std::move(ret);
+        }
       }
     } else {
       const auto& arr = isTypeArray(range->getType())
-          ? *dynamic_cast<const ArrayRvalue*>(range->getRvalue())->getValue()
-          : dynamic_cast<const ListRvalue*>(range->getRvalue())->getValue();
+                        ? *dynamic_cast<const ArrayRvalue*>(range->getRvalue())->getValue()
+                        : dynamic_cast<const ListRvalue*>(range->getRvalue())->getValue();
       for (const auto& it : arr) {
         auto rv = it->getRvalue();
         int type = rv->getType();
@@ -133,6 +172,7 @@ void VirtualMachine::run(Node* node) {
       }
     }
   }
+  return std::make_pair(false, std::unique_ptr<Value>(nullptr));
 }
 
 std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
@@ -171,6 +211,26 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
   }
   if (node->getType() == Node::VARIABLE) {
     return std::make_unique<Lvalue>(dynamic_cast<VariableNode*>(node)->getName());
+  }
+  if (node->getType() == Node::FUNCTION_CALL) {
+    auto fncNode = dynamic_cast<FunctionCallNode*>(node);
+    auto fncData = store.getFunctionData(fncNode->getFunctionName());
+    int argc = fncData->getArguments().size();
+    store.newLevel();
+    for (int i = 0; i < argc; ++i) {
+      auto expr = fncNode->getArguments()[i].get();
+      auto argv = evalExp(expr);
+      store.registerName(
+          fncData->getArguments()[i].first,
+          std::make_unique<VariableData>(fncData->getArguments()[i].second, std::move(argv))
+      );
+    }
+    auto ret = run(fncData->getBlock().get());
+    store.deleteLevel();
+    if (fncData->getReturnType() != TYPE_NONE && !ret.first) {
+      throw RuntimeError("non-void function finished execution without returning any value");
+    }
+    return std::move(ret.second);
   }
   if (node->getType() == Node::UNARY_OPERATOR) {
     auto unOpNode = dynamic_cast<UnaryOperatorNode*>(node);
