@@ -7,7 +7,7 @@
 
 class SemanticAnalyzer {
  public:
-  static void analyze(Node* node);
+  static void analyze(Node* node, bool allowReturn = false, int retType = TYPE_NONE);
 
  private:
   static void analyzeExpr(ExpressionNode* node);

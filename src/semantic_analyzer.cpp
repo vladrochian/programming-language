@@ -3,18 +3,35 @@
 #include "semantic_error.h"
 #include "store.h"
 
-void SemanticAnalyzer::analyze(Node* node) {
+void SemanticAnalyzer::analyze(Node* node, bool allowReturn, int retType) {
   if (node->getType() == Node::BLOCK) {
     auto blockNode = dynamic_cast<BlockNode*>(node);
     store.newLevel();
     for (const auto& it : blockNode->getContent()) {
-      analyze(it.get());
+      analyze(it.get(), allowReturn, retType);
     }
     store.deleteLevel();
   } else if (node->getType() == Node::STANDALONE_EXPRESSION) {
     analyzeExpr(dynamic_cast<StandaloneExpressionNode*>(node)->getExpression().get());
   } else if (node->getType() == Node::RETURN_INSTRUCTION) {
-    analyzeExpr(dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get());
+    if (!allowReturn) {
+      throw SemanticError("return is not available outside of a function");
+    }
+    auto expr = dynamic_cast<ReturnInstructionNode*>(node)->getExpression().get();
+    if (retType == TYPE_NONE) {
+      if (expr != nullptr) {
+        throw SemanticError("cannot return expresion in void function");
+      }
+    } else {
+      if (expr == nullptr) {
+        throw SemanticError("cannot have empty return in non-void function");
+      }
+      analyzeExpr(expr);
+      int tp = getExpressionType(expr);
+      if (tp != retType) {
+        throw SemanticError("return expression type does not match function type");
+      }
+    }
   } else if (node->getType() == Node::PRINT_INSTRUCTION) {
     auto exprToPrint = dynamic_cast<PrintInstructionNode*>(node)->getExpression().get();
     analyzeExpr(exprToPrint);
@@ -69,15 +86,31 @@ void SemanticAnalyzer::analyze(Node* node) {
       throw SemanticError("variable without type requires initializer");
     }
     store.registerName(varDecNode->getVariableName(), std::make_unique<VariableData>(type, nullptr));
+  } else if (node->getType() == Node::FUNCTION_DEFINITION) {
+    auto fncDefNode = dynamic_cast<FunctionDefinitionNode*>(node);
+    std::string fncName = fncDefNode->getFunctionName();
+    const auto& arguments = fncDefNode->getArguments();
+    int rt = fncDefNode->getReturnType();
+    for (size_t i = 0; i < arguments.size(); ++i)
+      for (size_t j = i + 1; j < arguments.size(); ++j) {
+        if (arguments[i].first == arguments[j].first) {
+          throw SemanticError("cannot have multiple arguments with the same name");
+        }
+      }
+    store.registerName(fncName, std::make_unique<FunctionData>(arguments, retType, fncDefNode->getBlock()));
+    store.newLevel();
+    // TODO: register arguments
+    analyze(fncDefNode->getBlock().get(), true, rt);
+    store.deleteLevel();
   } else if (node->getType() == Node::IF_STATEMENT) {
     auto ifNode = dynamic_cast<IfNode*>(node);
     analyzeExpr(ifNode->getCondition().get());
     if (getExpressionType(ifNode->getCondition().get()) != TYPE_BOOLEAN) {
       throw SemanticError("if condition should have boolean type");
     }
-    analyze(ifNode->getThenBlock().get());
+    analyze(ifNode->getThenBlock().get(), allowReturn, retType);
     if (ifNode->getElseBlock() != nullptr) {
-      analyze(ifNode->getElseBlock().get());
+      analyze(ifNode->getElseBlock().get(), allowReturn, retType);
     }
   } else if (node->getType() == Node::WHILE_STATEMENT) {
     auto whileNode = dynamic_cast<WhileNode*>(node);
@@ -85,7 +118,7 @@ void SemanticAnalyzer::analyze(Node* node) {
     if (getExpressionType(whileNode->getCondition().get()) != TYPE_BOOLEAN) {
       throw SemanticError("while condition should have boolean type");
     }
-    analyze(whileNode->getBlock().get());
+    analyze(whileNode->getBlock().get(), allowReturn, retType);
   } else if (node->getType() == Node::FOR_STATEMENT) {
     auto forNode = dynamic_cast<ForNode*>(node);
     auto range = forNode->getRangeExpression().get();
@@ -102,7 +135,7 @@ void SemanticAnalyzer::analyze(Node* node) {
         eType == TYPE_STRING ? TYPE_STRING : isTypeArray(eType) ? getArrayElementType(eType) : getListElementType(
             eType);
     store.registerName(forNode->getIterName(), std::make_unique<VariableData>(elemType, nullptr));
-    analyze(forNode->getBlock().get());
+    analyze(forNode->getBlock().get(), allowReturn, retType);
     store.deleteLevel();
   }
 }

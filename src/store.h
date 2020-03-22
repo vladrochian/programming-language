@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "node.h"
 #include "types.h"
 #include "value.h"
 
@@ -29,7 +30,8 @@ class VariableData : public ObjectData {
     } else if (type == TYPE_NUMBER) {
       this->value = std::make_unique<NumberRvalue>(value ? dynamic_cast<const NumberRvalue*>(v)->getValue() : 0.0);
     } else if (type == TYPE_STRING) {
-      this->value = std::make_unique<StringRvalue>(value ? dynamic_cast<const StringRvalue*>(v)->getValue() : std::string());
+      this->value = std::make_unique<StringRvalue>(
+          value ? dynamic_cast<const StringRvalue*>(v)->getValue() : std::string());
     } else if (isTypeArray(type)) {
       this->value = value ? std::make_unique<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(v))
                           : std::make_unique<ArrayRvalue>(type);
@@ -46,6 +48,25 @@ class VariableData : public ObjectData {
 
  private:
   std::unique_ptr<Rvalue> value;
+};
+
+class FunctionData : public ObjectData {
+ public:
+  FunctionData(std::vector<std::pair<std::string, int>> arguments, int retType, std::shared_ptr<BlockNode> block)
+      : arguments(std::move(arguments)), retType(retType), block(std::move(block)) {}
+
+  Type getType() const override { return FUNCTION; }
+
+  const std::vector<std::pair<std::string, int>>& getArguments() { return arguments; }
+
+  int getReturnType() { return retType; }
+
+  const std::shared_ptr<BlockNode>& getBlock() { return block; }
+
+ private:
+  std::vector<std::pair<std::string, int>> arguments;
+  int retType;
+  std::shared_ptr<BlockNode> block;
 };
 
 class StackLevel {

@@ -3,6 +3,9 @@
 #include "semantic_error.h"
 
 void StackLevel::registerName(const std::string& name, std::unique_ptr<ObjectData> objectData) {
+  if (names.count(name) > 0) {
+    throw SemanticError(name + " already exists in this context");
+  }
   names[name] = std::move(objectData);
 }
 

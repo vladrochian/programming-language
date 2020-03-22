@@ -282,7 +282,7 @@ Parser::parseFunctionSignature(const TokenList& tokenList) {
 std::unique_ptr<ReturnInstructionNode> Parser::parseReturnStatement(const TokenList& tokenList) {
   auto iter = tokenList.begin() + 2;
   if ((*iter)->getType() == Token::LINE_FEED) {
-    throw SyntaxError((*iter)->getLocation(), "expected expression");
+    return std::make_unique<ReturnInstructionNode>(nullptr);
   }
   return std::make_unique<ReturnInstructionNode>(ExpressionParser::parse(iter));
 }
