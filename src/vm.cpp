@@ -214,11 +214,56 @@ std::unique_ptr<Value> VirtualMachine::evalExp(ExpressionNode* node) {
   }
   if (node->getType() == Node::FUNCTION_CALL) {
     auto fncNode = dynamic_cast<FunctionCallNode*>(node);
-    auto fncData = store.getFunctionData(fncNode->getFunctionName());
+    std::string name = fncNode->getFunctionName();
+    const auto& arguments = fncNode->getArguments();
+    if (name == "toNumber") {
+      return std::make_unique<NumberRvalue>(
+          std::stod(dynamic_cast<const StringRvalue*>(evalExp(arguments[0].get())->getRvalue())->getValue())
+      );
+    }
+    if (name == "toString") {
+      auto exp = evalExp(arguments[0].get());
+      if (exp->getType() == TYPE_BOOLEAN) {
+        return std::make_unique<StringRvalue>(
+            dynamic_cast<const BooleanRvalue*>(exp->getRvalue())->getValue() ? "true" : "false"
+        );
+      }
+      return std::make_unique<StringRvalue>(
+          std::to_string(dynamic_cast<const NumberRvalue*>(exp->getRvalue())->getValue())
+      );
+    }
+    if (name == "len") {
+      return std::make_unique<NumberRvalue>(
+          dynamic_cast<const StringRvalue*>(evalExp(arguments[0].get())->getRvalue())->getValue().size()
+      );
+    }
+    if (name == "size") {
+      return std::make_unique<NumberRvalue>(
+          dynamic_cast<const ArrayRvalue*>(evalExp(arguments[0].get())->getRvalue())->getValue()->size()
+      );
+    }
+    if (name == "add") {
+      auto expr0 = evalExp(arguments[0].get());
+      auto expr1 = evalExp(arguments[1].get());
+      auto& v = *dynamic_cast<const ArrayRvalue*>(expr0->getRvalue())->getValue();
+      auto expRes = expr1->getRvalue();
+      int type = expRes->getType();
+      if (type == TYPE_BOOLEAN) {
+        v.emplace_back(std::make_shared<BooleanRvalue>(dynamic_cast<const BooleanRvalue*>(expRes)->getValue()));
+      } else if (type == TYPE_NUMBER) {
+        v.emplace_back(std::make_shared<NumberRvalue>(dynamic_cast<const NumberRvalue*>(expRes)->getValue()));
+      } else if (type == TYPE_STRING) {
+        v.emplace_back(std::make_shared<StringRvalue>(dynamic_cast<const StringRvalue*>(expRes)->getValue()));
+      } else if (isTypeArray(type)) {
+        v.emplace_back(std::make_shared<ArrayRvalue>(*dynamic_cast<const ArrayRvalue*>(expRes)));
+      }
+      return nullptr;
+    }
+    auto fncData = store.getFunctionData(name);
     int argc = fncData->getArguments().size();
     store.newLevel();
     for (int i = 0; i < argc; ++i) {
-      auto expr = fncNode->getArguments()[i].get();
+      auto expr = arguments[i].get();
       auto argv = evalExp(expr);
       store.registerName(
           fncData->getArguments()[i].first,

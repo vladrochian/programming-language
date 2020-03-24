@@ -182,13 +182,79 @@ int SemanticAnalyzer::getExpressionType(ExpressionNode* node) {
       return Lvalue(dynamic_cast<VariableNode*>(node)->getName()).getType();
     case Node::FUNCTION_CALL: {
       auto fncNode = dynamic_cast<FunctionCallNode*>(node);
-      auto fncData = store.getFunctionData(fncNode->getFunctionName());
+      std::string name = fncNode->getFunctionName();
+      const auto& arguments = fncNode->getArguments();
+      int as = arguments.size();
+      if (name == "toString") {
+        if (as != 1) {
+          throw SemanticError("toString function accepts one argument");
+        }
+        auto expr = arguments[0].get();
+        analyzeExpr(expr);
+        int tp = getExpressionType(expr);
+        if (tp != TYPE_BOOLEAN && tp != TYPE_NUMBER) {
+          throw SemanticError("the argument for toString should be a boolean or a number");
+        }
+        return TYPE_STRING;
+      }
+      if (name == "toNumber") {
+        if (as != 1) {
+          throw SemanticError("toNumber function accepts one argument");
+        }
+        auto expr = arguments[0].get();
+        analyzeExpr(expr);
+        int tp = getExpressionType(expr);
+        if (tp != TYPE_STRING) {
+          throw SemanticError("the argument for toNumber should be a boolean or a string");
+        }
+        return TYPE_NUMBER;
+      }
+      if (name == "len") {
+        if (as != 1) {
+          throw SemanticError("len function accepts one argument");
+        }
+        auto expr = arguments[0].get();
+        analyzeExpr(expr);
+        int tp = getExpressionType(expr);
+        if (tp != TYPE_STRING) {
+          throw SemanticError("the argument for len should be a string");
+        }
+        return TYPE_NUMBER;
+      }
+      if (name == "size") {
+        if (as != 1) {
+          throw SemanticError("size function accepts one argument");
+        }
+        auto expr = arguments[0].get();
+        analyzeExpr(expr);
+        int tp = getExpressionType(expr);
+        if (!isTypeArray(tp)) {
+          throw SemanticError("the argument for size should be an array");
+        }
+        return TYPE_NUMBER;
+      }
+      if (name == "add") {
+        if (as != 2) {
+          throw SemanticError("add function accepts two arguments");
+        }
+        auto expr0 = arguments[0].get();
+        auto expr1 = arguments[1].get();
+        analyzeExpr(expr0);
+        analyzeExpr(expr1);
+        int tp0 = getExpressionType(expr0);
+        int tp1 = getExpressionType(expr1);
+        if (!isTypeArray(tp0) || getArrayElementType(tp0) != tp1) {
+          throw SemanticError("the arguments for add should be an array and an element of the same type");
+        }
+        return TYPE_NONE;
+      }
+      auto fncData = store.getFunctionData(name);
       int argc = fncData->getArguments().size();
-      if (fncNode->getArguments().size() != argc) {
+      if (as != argc) {
         throw SemanticError("number of arguments does not match");
       }
       for (int i = 0; i < argc; ++i) {
-        auto expr = fncNode->getArguments()[i].get();
+        auto expr = arguments[i].get();
         analyzeExpr(expr);
         int tp = getExpressionType(expr);
         if (tp != fncData->getArguments()[i].second) {
